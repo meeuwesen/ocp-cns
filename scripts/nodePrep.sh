@@ -117,12 +117,14 @@ if hostname|grep ocpi >/dev/null; then
         else
            sleep 5
            subscription-manager attach --pool=$GLUSTERFS_ID
-        if [ "$?" -eq 0 ]; then
-           echo "Pool attached successfully"
-        else
-           echo "Incorrect Pool ID or no entitlements available"
-           exit 4
+           if [ "$?" -eq 0 ]; then
+              echo "Pool attached successfully"
+           else
+              echo "Incorrect Pool ID or no entitlements available"
+              exit 4
+           fi
         fi
+
 
         subscription-manager repos --enable=rh-gluster-3-for-rhel-7-server-rpms
 

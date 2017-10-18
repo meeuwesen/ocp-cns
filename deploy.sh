@@ -99,7 +99,7 @@ cat > azuredeploy.parameters.json << EOF
                         "value": "Standard_DS3_v2"
                 },
                 "openshiftClusterPrefix": {
-                        "value": "ocp36"
+                        "value": "ocp"
                 },
 		"openshiftMasterPublicIpDnsLabel": {
 			"value": "$MASTER_DNS"
