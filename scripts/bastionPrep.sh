@@ -5,6 +5,9 @@ USER=$1
 PASSWORD="$2"
 POOL_ID=$3
 
+
+echo "$USER - $PASSWORD - $POOL_ID"
+
 # Verify that we have access to Red Hat Network
 ITER=0
 while true; do
