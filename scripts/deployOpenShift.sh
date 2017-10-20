@@ -322,6 +322,9 @@ done|grep ocpm >>/etc/ansible/hosts
 for node in ocpi-{0..10}; do
 	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\'}\"
 done|grep ocpi >>/etc/ansible/hosts
+for node in ocpir-{0..10}; do
+	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\'}\"
+done|grep ocpi >>/etc/ansible/hosts
 for node in ocpn-{0..30}; do
 	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\'}\"
 done|grep ocpn >>/etc/ansible/hosts
@@ -341,6 +344,10 @@ for node in ocpm-0 ocpm-1 ocpm-2; do
 done
 
 for node in ocpi-{0..5}; do
+	ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $3 " " $2  }'|sed -e 's/(//' -e 's/)//' -e "s/.net/.net $node/"
+done
+
+for node in ocpir-{0..5}; do
 	ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $3 " " $2  }'|sed -e 's/(//' -e 's/)//' -e "s/.net/.net $node/"
 done
 

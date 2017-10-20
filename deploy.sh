@@ -107,6 +107,9 @@ cat > azuredeploy.parameters.json << EOF
 		"infraLbPublicIpDnsLabel": {
 			"value": "$INFRA_DNS"
 		},
+		"infraLbRestrictedPublicIpDnsLabel": {
+			"value": "$INFRA_DNS"
+		},
 		"masterInstanceCount": {
 			"value": $MASTERCOUNT
 		},
