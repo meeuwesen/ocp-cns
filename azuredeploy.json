@@ -1611,7 +1611,7 @@
 					}
 				}],
 				"backendAddressPools": [{
-					"name": "loadBalancerRestrictedBackEnd"
+					"name": "loadBalancerBackEnd"
 				}],
 				"loadBalancingRules": [{
 					"name": "OpenShiftRouterHTTP",
