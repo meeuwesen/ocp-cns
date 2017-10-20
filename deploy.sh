@@ -90,7 +90,7 @@ cat > azuredeploy.parameters.json << EOF
         "contentVersion": "1.0.0.0",
         "parameters": {
                 "_artifactsLocation": {
-                        "value": "https://raw.githubusercontent.com/maalbers/ocp-cns/master/"
+                        "value": "https://raw.githubusercontent.com/maalbers/ocp-cns/LbRestricted/"
                 },
                 "masterVmSize": {
                         "value": "Standard_DS4_v2"
@@ -108,7 +108,7 @@ cat > azuredeploy.parameters.json << EOF
 			"value": "$INFRA_DNS"
 		},
 		"infraLbRestrictedPublicIpDnsLabel": {
-			"value": "$INFRA_DNS"
+			"value": "${INFRA_DNS}r"
 		},
 		"masterInstanceCount": {
 			"value": $MASTERCOUNT
