@@ -1728,7 +1728,7 @@
 			"location": "[variables('location')]",
 			"apiVersion": "[variables('apiVersionCompute')]",
 			"tags": {
-				"displayName": "OpenShiftInfraNodes"
+				"displayName": "OpenShiftInfraRestrictedNodes"
 			},
 			"dependsOn": [
 				"[resourceId('Microsoft.Storage/storageAccounts', variables('newStorageAccountMaster'))]",
@@ -1777,27 +1777,27 @@
 						},
                         "createOption": "Empty"
 					}, {
-                       	"name": "[concat(variables('openshiftNodeHostname'), copyIndex(), '-glusterfs-pool1')]",
+                       	"name": "[concat(variables('openshiftInfraRestrictedHostname'), copyIndex(), '-glusterfs-pool1')]",
                         "diskSizeGB": "[parameters('dataDiskSizeCns')]",
                         "lun": 1,
                         "vhd": {
-                            "uri": "[concat(concat(reference(resourceId(resourceGroup().name, 'Microsoft.Storage/storageAccounts', variables('newStorageAccountNode')), variables('apiVersionStorage')).primaryEndpoints['blob'], 'vhds/'), variables('openshiftNodeHostname'), copyIndex(), '-glusterfs-pool1.vhd')]"
+                            "uri": "[concat(concat(reference(resourceId(resourceGroup().name, 'Microsoft.Storage/storageAccounts', variables('newStorageAccountNode')), variables('apiVersionStorage')).primaryEndpoints['blob'], 'vhds/'), variables('openshiftInfraRestrictedHostname'), copyIndex(), '-glusterfs-pool1.vhd')]"
                         },
                         "createOption": "Empty"
 					}, {
-                        "name": "[concat(variables('openshiftNodeHostname'), copyIndex(), '-glusterfs-pool2')]",
+                        "name": "[concat(variables('openshiftInfraRestrictedHostname'), copyIndex(), '-glusterfs-pool2')]",
                         "diskSizeGB": "[parameters('dataDiskSizeCns')]",
                         "lun": 2,
                         "vhd": {
-                        	"uri": "[concat(concat(reference(resourceId(resourceGroup().name, 'Microsoft.Storage/storageAccounts', variables('newStorageAccountNode')), variables('apiVersionStorage')).primaryEndpoints['blob'], 'vhds/'), variables('openshiftNodeHostname'), copyIndex(), '-glusterfs-pool2.vhd')]"
+                        	"uri": "[concat(concat(reference(resourceId(resourceGroup().name, 'Microsoft.Storage/storageAccounts', variables('newStorageAccountNode')), variables('apiVersionStorage')).primaryEndpoints['blob'], 'vhds/'), variables('openshiftInfraRestrictedHostname'), copyIndex(), '-glusterfs-pool2.vhd')]"
                         },
                         "createOption": "Empty"
 					}, {
-                        "name": "[concat(variables('openshiftNodeHostname'), copyIndex(), '-glusterfs-pool3')]",
+                        "name": "[concat(variables('openshiftInfraRestrictedHostname'), copyIndex(), '-glusterfs-pool3')]",
                         "diskSizeGB": "[parameters('dataDiskSizeCns')]",
                         "lun": 3,
                         "vhd": {
-                        	"uri": "[concat(concat(reference(resourceId(resourceGroup().name, 'Microsoft.Storage/storageAccounts', variables('newStorageAccountNode')), variables('apiVersionStorage')).primaryEndpoints['blob'], 'vhds/'), variables('openshiftNodeHostname'), copyIndex(), '-glusterfs3-pool.vhd')]"
+                        	"uri": "[concat(concat(reference(resourceId(resourceGroup().name, 'Microsoft.Storage/storageAccounts', variables('newStorageAccountNode')), variables('apiVersionStorage')).primaryEndpoints['blob'], 'vhds/'), variables('openshiftInfraRestrictedHostname'), copyIndex(), '-glusterfs3-pool.vhd')]"
                        	},
                         "createOption": "Empty"
                     }]
