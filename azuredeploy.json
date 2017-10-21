@@ -1591,6 +1591,12 @@
 				}
 			}
 		}, {
+			"type": "Microsoft.Compute/availabilitySets",
+			"name": "infrarestrictedavailabilityset",
+			"location": "[variables('location')]",
+			"apiVersion": "[variables('apiVersionCompute')]",
+			"properties": {}	
+		}, {
 			"type": "Microsoft.Network/loadBalancers",
 			"name": "[variables('infraRestrictedLoadBalancerName')]",
 			"location": "[variables('location')]",
@@ -1740,7 +1746,7 @@
 			},
 			"properties": {
 				"availabilitySet": {
-					"id": "[resourceId('Microsoft.Compute/availabilitySets', 'nodeavailabilityset')]"
+					"id": "[resourceId('Microsoft.Compute/availabilitySets', 'infrarestrictedavailabilityset')]"
 				},
 				"hardwareProfile": {
 					"vmSize": "[parameters('masterVmSize')]"
