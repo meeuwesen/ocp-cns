@@ -780,38 +780,12 @@
 							"id": "[variables('masterLb8443ProbeId')]"
 						}
 					}
-				}, {
-					"name": "CockpitConsole",
-					"properties": {
-						"frontendIPConfiguration": {
-							"id": "[variables('masterLbFrontEndConfigId')]"
-						},
-						"backendAddressPool": {
-							"id": "[variables('masterLbBackendPoolId')]"
-						},
-						"protocol": "Tcp",
-						"loadDistribution": "SourceIP",
-						"idleTimeoutInMinutes": 30,
-						"frontendPort": 9090,
-						"backendPort": 9090,
-						"probe": {
-							"id": "[variables('masterLbCockpitProbeId')]"
-						}
-					}
 				}],
 				"probes": [{
 					"name": "8443Probe",
 					"properties": {
 						"protocol": "Tcp",
 						"port": 8443,
-						"intervalInSeconds": 5,
-						"numberOfProbes": 2
-					}
-				}, {
-					"name": "cockpitProbe",
-					"properties": {
-						"protocol": "Tcp",
-						"port": 9090,
 						"intervalInSeconds": 5,
 						"numberOfProbes": 2
 					}
@@ -895,22 +869,6 @@
 							"id": "[variables('infraLbHttpsProbeId')]"
 						}
 					}
-				}, {
-					"name": "CockpitConsole",
-					"properties": {
-						"frontendIPConfiguration": {
-							"id": "[variables('infraLbFrontEndConfigId')]"
-						},
-						"backendAddressPool": {
-							"id": "[variables('infraLbBackendPoolId')]"
-						},
-						"protocol": "Tcp",
-						"frontendPort": 9090,
-						"backendPort": 9090,
-						"probe": {
-							"id": "[variables('infraLbCockpitProbeId')]"
-						}
-					}
 				}],
 				"probes": [{
 					"name": "httpProbe",
@@ -925,14 +883,6 @@
 					"properties": {
 						"protocol": "Tcp",
 						"port": 443,
-						"intervalInSeconds": 5,
-						"numberOfProbes": 2
-					}
-				}, {
-					"name": "cockpitProbe",
-					"properties": {
-						"protocol": "Tcp",
-						"port": 9090,
 						"intervalInSeconds": 5,
 						"numberOfProbes": 2
 					}
@@ -1529,7 +1479,7 @@
 						"protocol": "Tcp",
 						"sourcePortRange": "*",
 						"destinationPortRange": "22",
-						"sourceAddressPrefix": "*",
+						"sourceAddressPrefix": "77.241.224.0/20",
 						"destinationAddressPrefix": "*",
 						"access": "Allow",
 						"priority": 100,
@@ -1542,7 +1492,7 @@
 						"protocol": "Tcp",
 						"sourcePortRange": "*",
 						"destinationPortRange": "443",
-						"sourceAddressPrefix": "*",
+						"sourceAddressPrefix": "77.241.224.0/20",
 						"destinationAddressPrefix": "*",
 						"access": "Allow",
 						"priority": 200,
@@ -1555,7 +1505,7 @@
 						"protocol": "Tcp",
 						"sourcePortRange": "*",
 						"destinationPortRange": "80",
-						"sourceAddressPrefix": "*",
+						"sourceAddressPrefix": "77.241.224.0/20",
 						"destinationAddressPrefix": "*",
 						"access": "Allow",
 						"priority": 300,
@@ -1568,12 +1518,24 @@
 						"protocol": "Tcp",
 						"sourcePortRange": "*",
 						"destinationPortRange": "9090",
-						"sourceAddressPrefix": "*",
+						"sourceAddressPrefix": "77.241.224.0/20",
 						"destinationAddressPrefix": "*",
 						"access": "Allow",
 						"priority": 400,
 						"direction": "Inbound"
 					}
+				}, {
+					"name": "DenyAllIncoming",
+					"properties": {
+						"protocol": "*",
+						"sourcePortRange": "*",
+						"destinationPortRange": "*",
+						"sourceAddressPrefix": "*",
+						"destinationAddressPrefix": "*",
+						"access": "Deny",
+						"priority": 4096,
+						"direction": "Inbound"
+					}		
 				}]
 			}
 		}, {
@@ -1651,22 +1613,6 @@
 							"id": "[variables('infraRestrictedLbHttpsProbeId')]"
 						}
 					}
-				}, {
-					"name": "CockpitConsole",
-					"properties": {
-						"frontendIPConfiguration": {
-							"id": "[variables('infraRestrictedLbFrontEndConfigId')]"
-						},
-						"backendAddressPool": {
-							"id": "[variables('infraRestrictedLbBackendPoolId')]"
-						},
-						"protocol": "Tcp",
-						"frontendPort": 9090,
-						"backendPort": 9090,
-						"probe": {
-							"id": "[variables('infraRestrictedLbCockpitProbeId')]"
-						}
-					}
 				}],
 				"probes": [{
 					"name": "httpProbe",
@@ -1681,14 +1627,6 @@
 					"properties": {
 						"protocol": "Tcp",
 						"port": 443,
-						"intervalInSeconds": 5,
-						"numberOfProbes": 2
-					}
-				}, {
-					"name": "cockpitProbe",
-					"properties": {
-						"protocol": "Tcp",
-						"port": 9090,
 						"intervalInSeconds": 5,
 						"numberOfProbes": 2
 					}
