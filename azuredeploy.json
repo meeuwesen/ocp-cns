@@ -1526,7 +1526,7 @@
 						"protocol": "Tcp",
 						"sourcePortRange": "*",
 						"destinationPortRange": "22",
-						"sourceAddressPrefix": "77.241.224.0/20",
+						"sourceAddressPrefix": "[reference(concat(variables('openshiftBastionHostname'), 'nic')).ipConfigurations[0].properties.privateIPAddress]",
 						"destinationAddressPrefix": "*",
 						"access": "Allow",
 						"priority": 100,
