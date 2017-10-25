@@ -432,7 +432,6 @@
 		}
 	},
 	"resources": [
-
 		{
 			"apiVersion": "[variables('apiVersionNetwork')]",
 			"type": "Microsoft.Network/networkSecurityGroups",
@@ -452,6 +451,18 @@
 						"priority": 100,
 						"direction": "Inbound"
 					}
+				}, {
+					"name": "DenyAllIncoming",
+					"properties": {
+						"protocol": "*",
+						"sourcePortRange": "*",
+						"destinationPortRange": "*",
+						"sourceAddressPrefix": "*",
+						"destinationAddressPrefix": "*",
+						"access": "Deny",
+						"priority": 4096,
+						"direction": "Inbound"
+					}					
 				}]
 			}
 		}, {
@@ -512,6 +523,18 @@
 						"priority": 400,
 						"direction": "Inbound"
 					}
+				}, {
+					"name": "DenyAllIncoming",
+					"properties": {
+						"protocol": "*",
+						"sourcePortRange": "*",
+						"destinationPortRange": "*",
+						"sourceAddressPrefix": "*",
+						"destinationAddressPrefix": "*",
+						"access": "Deny",
+						"priority": 4096,
+						"direction": "Inbound"
+					}					
 				}]
 			}
 		}, {
@@ -572,6 +595,18 @@
 						"priority": 400,
 						"direction": "Inbound"
 					}
+				}, {
+					"name": "DenyAllIncoming",
+					"properties": {
+						"protocol": "*",
+						"sourcePortRange": "*",
+						"destinationPortRange": "*",
+						"sourceAddressPrefix": "*",
+						"destinationAddressPrefix": "*",
+						"access": "Deny",
+						"priority": 4096,
+						"direction": "Inbound"
+					}					
 				}]
 			}
 		}, {
@@ -632,6 +667,18 @@
 						"priority": 400,
 						"direction": "Inbound"
 					}
+				}, {
+					"name": "DenyAllIncoming",
+					"properties": {
+						"protocol": "*",
+						"sourcePortRange": "*",
+						"destinationPortRange": "*",
+						"sourceAddressPrefix": "*",
+						"destinationAddressPrefix": "*",
+						"access": "Deny",
+						"priority": 4096,
+						"direction": "Inbound"
+					}					
 				}]
 			}
 		}, {
