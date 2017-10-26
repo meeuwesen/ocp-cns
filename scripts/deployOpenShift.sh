@@ -328,15 +328,15 @@ done|grep ocpir >>/etc/ansible/hosts
 for node in ocpn-{0..5}; do
 	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\', \'environment\': \'ota\'}\"
 done|grep ocpn >>/etc/ansible/hosts
-for node in ocpn-{6..30}; do
-	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\', \'environment\': \'production\'}\"
-done|grep ocpn >>/etc/ansible/hosts
-fi
+#for node in ocpn-{6..30}; do
+#	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\', \'environment\': \'production\'}\"
+#done|grep ocpn >>/etc/ansible/hosts
+#fi
 
 echo "[glusterfs]" >>/etc/ansible/hosts
 for node in ocpir-{0..10}; do
         echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') glusterfs_devices=\'[ \"/dev/sde\", \"/dev/sdd\", \"/dev/sdf\" ]\'
-done|grep ocpi >>/etc/ansible/hosts
+done|grep ocpir >>/etc/ansible/hosts
 
 # Create and distribute hosts file to all nodes, this is due to us having to use 
 (
