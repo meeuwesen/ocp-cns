@@ -331,7 +331,8 @@ done|grep ocpn >>/etc/ansible/hosts
 #for node in ocpn-{6..30}; do
 #	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\', \'environment\': \'production\'}\"
 #done|grep ocpn >>/etc/ansible/hosts
-#fi
+
+fi
 
 echo "[glusterfs]" >>/etc/ansible/hosts
 for node in ocpir-{0..10}; do

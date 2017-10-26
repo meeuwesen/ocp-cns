@@ -111,7 +111,7 @@ systemctl enable docker
 systemctl start docker
 
 # Container Native Storage pre-req on infra (but not infra restricted) hosts
-if hostname|grep 'ocpi-' >/dev/null; then
+if hostname|grep 'ocpir-' >/dev/null; then
         
         subscription-manager attach --pool=$GLUSTERFS_ID
         if [ $? -eq 0 ]; then
