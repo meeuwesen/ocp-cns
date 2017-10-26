@@ -6,12 +6,15 @@ PASSWORD="$2"
 POOL_ID=$3
 GLUSTERFS_ID=$4
 
+#SERVER='https://access.redhat.com'
+SERVER='https://subscription.rhsm.redhat.com'
+
 echo "$USER - $PASSWORD - $POOL_ID - $GLUSTERFS_ID"
 
 # Verify that we have access to Red Hat Network
 ITER=0
 while true; do
-	curl -kv https://access.redhat.com >/dev/null 2>&1
+	curl -kv "$SERVER" >/dev/null 2>&1
 	if [ "$?" -eq 0 ]; then
 		echo "We have a working network connection to Red Hat."
 		break
@@ -29,12 +32,12 @@ done
 # Register Host with Cloud Access Subscription
 echo $(date) " - Register host with Cloud Access Subscription"
 
-subscription-manager register --username="$USER" --password="$PASSWORD" --force
+subscription-manager register --username="$USER" --password="$PASSWORD" --force --serverurl="$SERVER"
 if [ $? -eq 0 ]; then
    echo "Subscribed successfully"
 else
    sleep 5
-   subscription-manager register --username="$USER" --password="$PASSWORD" --force
+   subscription-manager register --username="$USER" --password="$PASSWORD" --force --serverurl="$SERVER"
    if [ "$?" -eq 0 ]; then
       echo "Subscribed successfully."
    else
