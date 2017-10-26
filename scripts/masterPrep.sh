@@ -5,13 +5,13 @@ USER=$1
 PASSWORD="$2"
 POOL_ID=$3
 
-#SERVER='https://access.redhat.com'
-SERVER='https://subscription.rhsm.redhat.com'
+#SERVER='https://subscription.rhsm.redhat.com'
+SERVER='http://subscription.rhsm.stage.redhat.com'
 
 # Verify that we have access to Red Hat Network
 ITER=0
 while true; do
-	curl -kv "$SERVER" >/dev/null 2>&1
+	curl -kv https://access.redhat.com >/dev/null 2>&1
 	if [ "$?" -eq 0 ]; then
 		echo "We have a working network connection to Red Hat."
 		break
