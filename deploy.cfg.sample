@@ -16,6 +16,7 @@ OCP_PASSWORD=
 # This should be the subscription pool id for your OpenShift subscriptions
 # Read about how to get the pool id here: https://access.redhat.com/solutions/125873
 SUBSCRIPTION_POOL=
+INFRA_SUBSCRIPTION_POOL=
 
 # This needs to be 3, or Container Native Storage install will fail
 MASTERCOUNT=3
@@ -61,4 +62,3 @@ DOMAINTYPE=xipio
 
 # If you are using custom DOMAINTYPE, change this to the subdomain which you have pointed to INFRA_DNS
 CUSTOMDOMAIN=domainname.com
-

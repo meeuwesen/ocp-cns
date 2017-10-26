@@ -134,6 +134,9 @@ cat > azuredeploy.parameters.json << EOF
 		"cloudAccessPoolId": {
 			"value": "$SUBSCRIPTION_POOL"
 		},
+		"cloudAccessInfraPoolId": {
+			"value": "$INFRA_SUBSCRIPTION_POOL"
+		},
 		"cloudAccessGlusterFSPoolId": {
 			"value": "$SUBSCRIPTIONGLUSTERFS_POOL"
 		},
