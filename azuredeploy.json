@@ -151,6 +151,13 @@
 				"description": "Pool ID with OpenShift entitlements (To find it, run on registered server: subscription-manager list)"
 			}
 		},
+		"cloudAccessInfraPoolId": {
+			"type": "string",
+			"minLength": 1,
+			"metadata": {
+				"description": "Pool ID with OpenShift Master/Infra/Broker entitlements (To find it, run on registered server: subscription-manager list)"
+			}
+		},
 		"cloudAccessGlusterFSPoolId": {
 			"type": "string",
 			"minLength": 1,
