@@ -529,19 +529,7 @@
 						"access": "Allow",
 						"priority": 400,
 						"direction": "Inbound"
-					}
-				}, {
-					"name": "DenyAllIncoming",
-					"properties": {
-						"protocol": "*",
-						"sourcePortRange": "*",
-						"destinationPortRange": "*",
-						"sourceAddressPrefix": "*",
-						"destinationAddressPrefix": "*",
-						"access": "Deny",
-						"priority": 4096,
-						"direction": "Inbound"
-					}					
+					}			
 				}]
 			}
 		}, {
@@ -601,19 +589,7 @@
 						"access": "Allow",
 						"priority": 400,
 						"direction": "Inbound"
-					}
-				}, {
-					"name": "DenyAllIncoming",
-					"properties": {
-						"protocol": "*",
-						"sourcePortRange": "*",
-						"destinationPortRange": "*",
-						"sourceAddressPrefix": "*",
-						"destinationAddressPrefix": "*",
-						"access": "Deny",
-						"priority": 4096,
-						"direction": "Inbound"
-					}					
+					}				
 				}]
 			}
 		}, {
@@ -673,19 +649,7 @@
 						"access": "Allow",
 						"priority": 400,
 						"direction": "Inbound"
-					}
-				}, {
-					"name": "DenyAllIncoming",
-					"properties": {
-						"protocol": "*",
-						"sourcePortRange": "*",
-						"destinationPortRange": "*",
-						"sourceAddressPrefix": "*",
-						"destinationAddressPrefix": "*",
-						"access": "Deny",
-						"priority": 4096,
-						"direction": "Inbound"
-					}					
+					}				
 				}]
 			}
 		}, {
@@ -1550,19 +1514,7 @@
 						"access": "Allow",
 						"priority": 400,
 						"direction": "Inbound"
-					}
-				}, {
-					"name": "DenyAllIncoming",
-					"properties": {
-						"protocol": "*",
-						"sourcePortRange": "*",
-						"destinationPortRange": "*",
-						"sourceAddressPrefix": "*",
-						"destinationAddressPrefix": "*",
-						"access": "Deny",
-						"priority": 4096,
-						"direction": "Inbound"
-					}		
+					}	
 				}]
 			}
 		}, {
