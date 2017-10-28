@@ -13,7 +13,7 @@ OCP_USER=
 # This should be the password which is used for the OCP_USER
 OCP_PASSWORD=
 
-# This should be the subscription pool id for your OpenShift subscriptions
+# These should be the subscription pool id's for your OpenShift subscriptions
 # Read about how to get the pool id here: https://access.redhat.com/solutions/125873
 SUBSCRIPTION_POOL=
 INFRA_SUBSCRIPTION_POOL=
@@ -21,8 +21,11 @@ INFRA_SUBSCRIPTION_POOL=
 # This needs to be 3, or Container Native Storage install will fail
 MASTERCOUNT=3
 
-# This is the number of nodes which runs your container workloads.
-NODECOUNT=1
+# This is the number of test nodes which runs your container workloads.
+TESTNODECOUNT=1
+
+# This is the number of production nodes which runs your container workloads.
+PRODNODECOUNT=1
 
 # This is your public ssh key, normally located here: ~/.ssh/id_rsa.pub it will be used to allow passwordless login to the cluster.
 # Don't forget to put " " around your key.

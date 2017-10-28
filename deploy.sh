@@ -90,7 +90,7 @@ cat > azuredeploy.parameters.json << EOF
         "contentVersion": "1.0.0.0",
         "parameters": {
                 "_artifactsLocation": {
-                        "value": "https://raw.githubusercontent.com/maalbers/ocp-cns/LbRestricted/"
+                        "value": "https://raw.githubusercontent.com/maalbers/ocp-cns/Subnets/"
                 },
                 "masterVmSize": {
                         "value": "Standard_DS4_v2"
