@@ -223,9 +223,12 @@ $MASTER-0.$DOMAIN
 $MASTER-0.$DOMAIN openshift_node_labels="{'region': 'master', 'zone': 'default'}"
 $INFRA-0.$DOMAIN openshift_node_labels="{'region': 'infra', 'zone': 'default'}"
 EOF
-for node in ocpn-{0..30}; do
-	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\'}\"
-done|grep ocpn >>/etc/ansible/hosts
+for node in ocpnt-{0..30}; do
+  echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\', \'environment\': \'test\'}\"
+done|grep ocpnt >>/etc/ansible/hosts
+for node in ocpnp-{0..30}; do
+  echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\', \'environment\': \'production\'}\"
+done|grep ocpnp >>/etc/ansible/hosts
 
 else
 
