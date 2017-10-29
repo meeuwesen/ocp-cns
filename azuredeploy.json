@@ -1278,7 +1278,7 @@
 				"[concat('Microsoft.Network/networkInterfaces/', variables('openshiftTestNodeHostname'), copyIndex(), 'nic')]"
 			],
 			"copy": {
-				"name": "nodeLoop",
+				"name": "testnodeLoop",
 				"count": "[parameters('testnodeInstanceCount')]"
 			},
 			"properties": {
@@ -1480,13 +1480,13 @@
 			"location": "[variables('location')]",
 			"apiVersion": "[variables('apiVersionCompute')]",
 			"tags": {
-				"displayName": "PrepNodes"
+				"displayName": "PrepTestNodes"
 			},
 			"dependsOn": [
 				"[concat('Microsoft.Compute/virtualMachines/', variables('openshiftTestNodeHostname'), '-', copyIndex())]"
 			],
 			"copy": {
-				"name": "nodePrepLoop",
+				"name": "testnodePrepLoop",
 				"count": "[parameters('testnodeInstanceCount')]"
 			},
 			"properties": {
@@ -1541,7 +1541,7 @@
 			"dependsOn": [
 				"masterPrepLoop",
 				"infraPrepLoop",
-				"nodePrepLoop",
+				"testnodePrepLoop",
 				"prodnodePrepLoop"
 			],
 			"properties": {
