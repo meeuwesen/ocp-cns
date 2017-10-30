@@ -110,45 +110,4 @@ fi
 systemctl enable docker
 systemctl start docker
 
-# Container Native Storage pre-req on infra (but not infra restricted) hosts
-if hostname|grep 'ocpi-' >/dev/null; then
-        
-        subscription-manager attach --pool=$GLUSTERFS_ID
-        if [ $? -eq 0 ]; then
-           echo "Pool attached successfully"
-        else
-           sleep 5
-           subscription-manager attach --pool=$GLUSTERFS_ID
-           if [ "$?" -eq 0 ]; then
-              echo "Pool attached successfully"
-           else
-              echo "Incorrect Pool ID or no entitlements available"
-              exit 4
-           fi
-        fi
-
-
-        subscription-manager repos --enable=rh-gluster-3-for-rhel-7-server-rpms
-
-        # CNS yum pre-reqs
-        yum -y install rpcbind redhat-storage-server gluster-block
-
-        # CNS config pre-reqs
-        systemctl add-wants multi-user rpcbind.service
-        systemctl enable rpcbind.service
-        systemctl start rpcbind.service
-
-        # Gluster pre-reqs
-        modprobe dm_thin_pool
-        modprobe dm_multipath
-        modprobe target_core_user
-
-        # Persist gluster pre-reqs
-        echo dm_thin_pool >/etc/modules-load.d/dm_thin_pool.conf
-        echo dm_multipath >/etc/modules-load.d/dm_multipath.conf
-        echo target_core_user >/etc/modules-load.d/target_core_user.conf
-fi
-
-
 echo $(date) " - Script Complete"
-

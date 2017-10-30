@@ -20,7 +20,9 @@ if [ -f ./deploy.cfg ]; then
 		OK=1
 	elif test -z $OCP_PASSWORD; then
 		OK=1
-	elif test -z $SUBSCRIPTION_POOL; then
+	elif test -z $INFRA_SUBSCRIPTION_POOL; then
+		OK=1
+	elif test -z $NODE_SUBSCRIPTION_POOL; then
 		OK=1
 	elif test -z $SUBSCRIPTIONGLUSTERFS_POOL; then
 		OK=1
@@ -94,6 +96,9 @@ cat > azuredeploy.parameters.json << EOF
                 },
                 "masterVmSize": {
                         "value": "Standard_DS4_v2"
+		},
+                "infraVmSize": {
+                        "value": "Standard_DS3_v2"	
                 },
                 "nodeVmSize": {
                         "value": "Standard_DS2_v2"
@@ -113,8 +118,14 @@ cat > azuredeploy.parameters.json << EOF
 		"masterInstanceCount": {
 			"value": $MASTERCOUNT
 		},
-		"nodeInstanceCount": {
-			"value": $NODECOUNT
+		"infraInstanceCount": {
+			"value": $INFRACOUNT
+		},
+		"testnodeInstanceCount": {
+			"value": $TESTNODECOUNT
+		},
+		"prodnodeInstanceCount": {
+			"value": $PRODNODECOUNT
 		},
 		"dataDiskSize": {
 			"value": $DISKSIZE
@@ -131,14 +142,11 @@ cat > azuredeploy.parameters.json << EOF
 		"cloudAccessPassword": {
 			"value": "$RHN_PASSWORD"
 		},
-		"cloudAccessPoolId": {
-			"value": "$SUBSCRIPTION_POOL"
-		},
 		"cloudAccessInfraPoolId": {
 			"value": "$INFRA_SUBSCRIPTION_POOL"
 		},
-		"cloudAccessGlusterFSPoolId": {
-			"value": "$SUBSCRIPTIONGLUSTERFS_POOL"
+		"cloudAccessNodePoolId": {
+			"value": "$NODE_SUBSCRIPTION_POOL"
 		},
 		"sshPublicKey": {
 			"value": "$PUBLIC_SSH_KEY"

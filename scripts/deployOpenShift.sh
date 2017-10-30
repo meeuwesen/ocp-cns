@@ -10,15 +10,8 @@ PRIVATEKEY=$3
 MASTER=$4
 MASTERPUBLICIPHOSTNAME=$5
 MASTERPUBLICIPADDRESS=$6
-INFRA=$7
-NODE=$8
-NODECOUNT=$9
-MASTERCOUNT=${10}
-ROUTING=${11}
+ROUTING=${7}
 BASTION=$(hostname -f)
-
-MASTERLOOP=$((MASTERCOUNT - 1))
-NODELOOP=$((NODECOUNT - 1))
 
 DOMAIN=$( awk 'NR==2' /etc/resolv.conf | awk '{ print $2 }' )
 
@@ -104,30 +97,7 @@ cat > /home/${SUDOUSER}/postinstall3.yml <<EOF
     shell: echo "${PASSWORD}"|passwd root --stdin
 EOF
 
-if [ $MASTERCOUNT -eq 1 ]
-then
-# Run on master
-cat > /home/${SUDOUSER}/postinstall4.yml <<EOF
----
-- hosts: masters
-  remote_user: ${SUDOUSER}
-  become: yes
-  become_method: sudo
-  vars:
-    description: "Unset default registry DNS name"
-  tasks:
-  - name: copy atomic-openshift-master file
-    copy:
-      src: /tmp/atomic-openshift-master
-      dest: /etc/sysconfig/atomic-openshift-master
-      owner: root
-      group: root
-      mode: 0644
-  - name: restart master
-    shell: systemctl restart atomic-openshift-master
-EOF
-else
-# HA setup. Run on all masters
+# Run on all masters
 cat > /home/${SUDOUSER}/postinstall4.yml <<EOF
 ---
 - hosts: masters
@@ -145,92 +115,9 @@ cat > /home/${SUDOUSER}/postinstall4.yml <<EOF
       group: root
       mode: 0644
 EOF
-fi
 
 # Create Ansible Hosts File
 echo $(date) " - Create Ansible Hosts file"
-
-if [ $MASTERCOUNT -eq 1 ]
-then
-
-cat > /etc/ansible/hosts <<EOF
-# Create an OSEv3 group that contains the masters and nodes groups
-[OSEv3:children]
-masters
-nodes
-nfs
-
-# Set variables common for all OSEv3 hosts
-[OSEv3:vars]
-ansible_ssh_user=$SUDOUSER
-ansible_become=yes
-openshift_install_examples=true
-deployment_type=openshift-enterprise
-docker_udev_workaround=true
-openshift_use_dnsmasq=true
-openshift_disable_check=disk_availability
-openshift_master_default_subdomain=$ROUTING
-openshift_override_hostname_check=true
-osm_use_cockpit=true
-os_sdn_network_plugin_name='redhat/openshift-ovs-multitenant'
-
-openshift_master_cluster_hostname=$MASTERPUBLICIPHOSTNAME
-openshift_master_cluster_public_hostname=$MASTERPUBLICIPHOSTNAME
-#openshift_master_cluster_public_vip=$MASTERPUBLICIPADDRESS
-
-# Enable HTPasswdPasswordIdentityProvider
-openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider', 'filename': '/etc/origin/master/htpasswd'}]
-
-# Configure persistent storage via nfs server on master
-openshift_hosted_registry_storage_kind=nfs
-openshift_hosted_registry_storage_access_modes=['ReadWriteMany']
-openshift_hosted_registry_storage_host=$MASTER-0.$DOMAIN
-openshift_hosted_registry_storage_nfs_directory=/exports
-openshift_hosted_registry_storage_volume_name=registry
-openshift_hosted_registry_storage_volume_size=5Gi
-
-# Setup metrics
-openshift_hosted_metrics_deploy=true
-# As of this writing, there's a bug in the metrics deployment.
-# You'll see the metrics failing to deploy 59 times, it will, though, succeed the 60'th time.
-openshift_hosted_metrics_storage_kind=nfs
-openshift_hosted_metrics_storage_access_modes=['ReadWriteOnce']
-openshift_hosted_metrics_storage_host=$MASTER-0.$DOMAIN
-openshift_hosted_metrics_storage_nfs_directory=/exports
-openshift_hosted_metrics_storage_volume_name=metrics
-openshift_hosted_metrics_storage_volume_size=10Gi
-openshift_hosted_metrics_public_url=https://metrics.$ROUTING/hawkular/metrics
-
-# Setup logging
-openshift_hosted_logging_deploy=true
-openshift_hosted_logging_storage_kind=nfs
-openshift_hosted_logging_storage_access_modes=['ReadWriteOnce']
-openshift_hosted_logging_storage_host=$MASTER-0.$DOMAIN
-openshift_hosted_logging_storage_nfs_directory=/exports
-openshift_hosted_logging_storage_volume_name=logging
-openshift_hosted_logging_storage_volume_size=10Gi
-openshift_master_logging_public_url=https://kibana.$ROUTING
-
-# host group for masters
-[masters]
-$MASTER-0.$DOMAIN
-
-[nfs]
-$MASTER-0.$DOMAIN
-
-# host group for nodes
-[nodes]
-$MASTER-0.$DOMAIN openshift_node_labels="{'region': 'master', 'zone': 'default'}"
-$INFRA-0.$DOMAIN openshift_node_labels="{'region': 'infra', 'zone': 'default'}"
-EOF
-for node in ocpnt-{0..30}; do
-  echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\', \'environment\': \'test\'}\"
-done|grep ocpnt >>/etc/ansible/hosts
-for node in ocpnp-{0..30}; do
-  echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\', \'environment\': \'production\'}\"
-done|grep ocpnp >>/etc/ansible/hosts
-
-else
 
 cat > /etc/ansible/hosts <<EOF
 # Create an OSEv3 group that contains the masters and nodes groups
@@ -240,7 +127,6 @@ nodes
 etcd
 nfs
 lb
-glusterfs
 
 # Set variables common for all OSEv3 hosts
 [OSEv3:vars]
@@ -331,12 +217,6 @@ done|grep ocpnt >>/etc/ansible/hosts
 for node in ocpnp-{0..30}; do
 	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\', \'environment\': \'production\'}\"
 done|grep ocpnp >>/etc/ansible/hosts
-fi
-
-echo "[glusterfs]" >>/etc/ansible/hosts
-for node in ocpi-{0..10}; do
-        echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') glusterfs_devices=\'[ \"/dev/sde\", \"/dev/sdd\", \"/dev/sdf\" ]\'
-done|grep ocpi >>/etc/ansible/hosts
 
 # Create and distribute hosts file to all nodes, this is due to us having to use 
 (
@@ -400,7 +280,6 @@ echo $(date) "- Assigning password for root, which is used to login to Cockpit"
 runuser -l $SUDOUSER -c "ansible-playbook ~/postinstall3.yml"
 
 # Unset of OPENSHIFT_DEFAULT_REGISTRY. Just the easiest way out.
-
 cat > /tmp/atomic-openshift-master <<EOF
 OPTIONS=--loglevel=2
 CONFIG_FILE=/etc/origin/master/master-config.yaml
@@ -421,18 +300,11 @@ chmod a+r /tmp/atomic-openshift-master
 runuser -l $SUDOUSER -c "ansible-playbook ~/postinstall4.yml"
 
 # OPENSHIFT_DEFAULT_REGISTRY UNSET MAGIC
-# Annotate Glusterfs storage class
-if [ $MASTERCOUNT -ne 1 ]
-then
-	for item in ocpm-0 ocpm-1 ocpm-2; do
-		runuser -l $SUDOUSER -c "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $item 'sudo sed -i \"s/OPENSHIFT_DEFAULT_REGISTRY/#OPENSHIFT_DEFAULT_REGISTRY/g\" /etc/sysconfig/atomic-openshift-master-api'"
-		runuser -l $SUDOUSER -c "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $item 'sudo sed -i \"s/OPENSHIFT_DEFAULT_REGISTRY/#OPENSHIFT_DEFAULT_REGISTRY/g\" /etc/sysconfig/atomic-openshift-master-controllers'"
-		runuser -l $SUDOUSER -c "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $item 'sudo systemctl restart atomic-openshift-master-api'"
-		runuser -l $SUDOUSER -c "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $item 'sudo systemctl restart atomic-openshift-master-controllers'"
-		if [ "$item" == "ocpm-0" ]; then
-			runuser -l $SUDOUSER -c "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $item 'sudo oc annotate sc glusterfs-storage storageclass.kubernetes.io/is-default-class=\"true\"'"
-		fi
-	done
-fi
+for item in ocpm-0 ocpm-1 ocpm-2; do
+	runuser -l $SUDOUSER -c "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $item 'sudo sed -i \"s/OPENSHIFT_DEFAULT_REGISTRY/#OPENSHIFT_DEFAULT_REGISTRY/g\" /etc/sysconfig/atomic-openshift-master-api'"
+	runuser -l $SUDOUSER -c "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $item 'sudo sed -i \"s/OPENSHIFT_DEFAULT_REGISTRY/#OPENSHIFT_DEFAULT_REGISTRY/g\" /etc/sysconfig/atomic-openshift-master-controllers'"
+	runuser -l $SUDOUSER -c "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $item 'sudo systemctl restart atomic-openshift-master-api'"
+	runuser -l $SUDOUSER -c "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $item 'sudo systemctl restart atomic-openshift-master-controllers'"
+done
 
 echo $(date) " - Script complete"

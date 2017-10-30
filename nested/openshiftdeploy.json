@@ -46,28 +46,49 @@
 			"type": "string",
 			"minLength": 1,
 			"metadata": {
-				"description": "OpenShift Infra Node hostname"
+				"description": "OpenShift Infra hostname"
 			}
 		},
-		"openshiftNodeHostname": {
+		"openshiftTestNodeHostname": {
 			"type": "string",
 			"minLength": 1,
 			"metadata": {
-				"description": "OpenShift Node hostname"
+				"description": "OpenShift Test Node hostname"
+			}
+		},
+		"openshiftProdNodeHostname": {
+			"type": "string",
+			"minLength": 1,
+			"metadata": {
+				"description": "OpenShift Prod Node hostname"
 			}
 		},
 		"masterInstanceCount": {
 			"type": "int",
 			"minValue": 1,
 			"metadata": {
-				"description": "Number of OpenShift Master nodes"
+				"description": "Number of OpenShift Masters"
 			}
 		},
-		"nodeInstanceCount": {
+		"infraInstanceCount": {
 			"type": "int",
 			"minValue": 1,
 			"metadata": {
-				"description": "Number of OpenShift nodes"
+				"description": "Number of OpenShift Infra instances"
+			}
+		},
+		"testnodeInstanceCount": {
+			"type": "int",
+			"minValue": 1,
+			"metadata": {
+				"description": "Number of OpenShift Test nodes"
+			}
+		},
+		"prodnodeInstanceCount": {
+			"type": "int",
+			"minValue": 1,
+			"metadata": {
+				"description": "Number of OpenShift Prod nodes"
 			}
 		},
 		"adminUsername": {
@@ -134,7 +155,7 @@
 				]
 			},
 			"protectedSettings": {
-				"commandToExecute": "[concat('bash ', variables('openshiftDeploymentScriptFileName'), ' \"', parameters('adminUsername'), '\" ', variables('singlequote'), parameters('openshiftPassword'), variables('singlequote'), ' \"', parameters('sshPrivateKey'), '\" \"', parameters('openshiftMasterHostname'), '\" \"', parameters('openshiftMasterPublicIpFqdn'), '\" \"', parameters('openshiftMasterPublicIpAddress'), '\" \"', parameters('openshiftInfraHostname'), '\" \"', parameters('openshiftNodeHostname'), '\" \"', parameters('nodeInstanceCount'), '\" \"', parameters('MasterInstanceCount'), '\" \"', parameters(parameters('subDomainChosen')), '\"')]"
+				"commandToExecute": "[concat('bash ', variables('openshiftDeploymentScriptFileName'), ' \"', parameters('adminUsername'), '\" ', variables('singlequote'), parameters('openshiftPassword'), variables('singlequote'), ' \"', parameters('sshPrivateKey'), '\" \"', parameters('openshiftMasterHostname'), '\" \"', parameters('openshiftMasterPublicIpFqdn'), '\" \"', parameters('openshiftMasterPublicIpAddress'), '\" \"', parameters(parameters('subDomainChosen')), '\"')]"
 			}
 		}
 	}],

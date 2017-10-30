@@ -4,6 +4,7 @@ echo $(date) " - Starting Script"
 USER=$1
 PASSWORD="$2"
 POOL_ID=$3
+STORAGEACCOUNT1=$5
 
 # Verify that we have access to Red Hat Network
 ITER=0
@@ -63,8 +64,8 @@ subscription-manager repos --disable="*"
 subscription-manager repos \
     --enable="rhel-7-server-rpms" \
     --enable="rhel-7-server-extras-rpms" \
-    --enable="rhel-7-fast-datapath-rpms" \
-    --enable="rhel-7-server-ose-3.6-rpms"
+    --enable="rhel-7-server-ose-3.6-rpms" \
+    --enable="rhel-7-fast-datapath-rpms"
 
 # Install and enable Cockpit
 echo $(date) " - Installing and enabling Cockpit"
@@ -146,6 +147,22 @@ then
    chmod a+rwx /exports -R  
 fi
 
+# Create Storage Class yml files on MASTER-0
 
+if hostname -f|grep -- "-0" >/dev/null
+then
+cat <<EOF > /home/${SUDOUSER}/scgeneric1.yml
+kind: StorageClass
+apiVersion: storage.k8s.io/v1beta1
+metadata:
+  name: generic
+  annotations:
+    storageclass.beta.kubernetes.io/is-default-class: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  storageAccount: ${STORAGEACCOUNT1}
+EOF
+
+fi
 
 echo $(date) " - Script Complete"

@@ -15,11 +15,14 @@ OCP_PASSWORD=
 
 # These should be the subscription pool id's for your OpenShift subscriptions
 # Read about how to get the pool id here: https://access.redhat.com/solutions/125873
-SUBSCRIPTION_POOL=
 INFRA_SUBSCRIPTION_POOL=
+NODE_SUBSCRIPTION_POOL=
 
-# This needs to be 3, or Container Native Storage install will fail
+# This is the numner of master instances.
 MASTERCOUNT=3
+
+# This is the number of infra instances.
+INFRACOUNT=1
 
 # This is the number of test nodes which runs your container workloads.
 TESTNODECOUNT=1
