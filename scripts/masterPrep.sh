@@ -4,7 +4,7 @@ echo $(date) " - Starting Script"
 USER=$1
 PASSWORD="$2"
 POOL_ID=$3
-STORAGEACCOUNT1=$5
+STORAGEACCOUNT1=$4
 
 # Verify that we have access to Red Hat Network
 ITER=0

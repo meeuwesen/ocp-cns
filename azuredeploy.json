@@ -1446,7 +1446,7 @@
 					]
 				},
 				"protectedSettings": {
-					"commandToExecute": "[concat('bash ', variables('masterPrepScriptFileName'), ' ', parameters('cloudAccessUsername'), ' ', variables('singlequote'), parameters('cloudAccessPassword'), variables('singlequote'), ' ', parameters('cloudAccessInfraPoolId' , ' ', variables('newStorageAccountPersistentVolume1')))]"
+					"commandToExecute": "[concat('bash ', variables('masterPrepScriptFileName'), ' ', parameters('cloudAccessUsername'), ' ', variables('singlequote'), parameters('cloudAccessPassword'), variables('singlequote'), ' ', parameters('cloudAccessInfraPoolId'), ' ', variables('newStorageAccountPersistentVolume1'))]"
 				}
 			}
 		}, {
