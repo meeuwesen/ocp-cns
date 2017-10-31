@@ -1230,7 +1230,7 @@
 					"id": "[resourceId('Microsoft.Compute/availabilitySets', 'infraavailabilityset')]"
 				},
 				"hardwareProfile": {
-					"vmSize": "[parameters('masterVmSize')]"
+					"vmSize": "[parameters('infraVmSize')]"
 				},
 				"osProfile": {
 					"computerName": "[concat(variables('openshiftInfraHostname'), '-', copyIndex())]",
@@ -1475,7 +1475,7 @@
 					]
 				},
 				"protectedSettings": {
-					"commandToExecute": "[concat('bash ', variables('nodePrepScriptFileName'), ' ', parameters('cloudAccessUsername'), ' ', variables('singlequote'), parameters('cloudAccessPassword'), variables('singlequote'), ' ', parameters('cloudAccessInfraPoolId'), ' ',parameters('cloudAccessGlusterFSPoolId'))]"
+					"commandToExecute": "[concat('bash ', variables('nodePrepScriptFileName'), ' ', parameters('cloudAccessUsername'), ' ', variables('singlequote'), parameters('cloudAccessPassword'), variables('singlequote'), ' ', parameters('cloudAccessInfraPoolId'))]"
 				}
 			}
 		}, {
@@ -1504,7 +1504,7 @@
 					]
 				},
 				"protectedSettings": {
-					"commandToExecute": "[concat('bash ', variables('nodePrepScriptFileName'), ' ', parameters('cloudAccessUsername'), ' ', variables('singlequote'), parameters('cloudAccessPassword'), variables('singlequote'), ' ', parameters('cloudAccessPoolId'), ' ', parameters('cloudAccessGlusterFSPoolId'))]"
+					"commandToExecute": "[concat('bash ', variables('nodePrepScriptFileName'), ' ', parameters('cloudAccessUsername'), ' ', variables('singlequote'), parameters('cloudAccessPassword'), variables('singlequote'), ' ', parameters('cloudAccessNodePoolId'))]"
 				}
 			}
 		}, {
@@ -1533,7 +1533,7 @@
 					]
 				},
 				"protectedSettings": {
-					"commandToExecute": "[concat('bash ', variables('nodePrepScriptFileName'), ' ', parameters('cloudAccessUsername'), ' ', variables('singlequote'), parameters('cloudAccessPassword'), variables('singlequote'), ' ', parameters('cloudAccessPoolId'), ' ', parameters('cloudAccessGlusterFSPoolId'))]"
+					"commandToExecute": "[concat('bash ', variables('nodePrepScriptFileName'), ' ', parameters('cloudAccessUsername'), ' ', variables('singlequote'), parameters('cloudAccessPassword'), variables('singlequote'), ' ', parameters('cloudAccessNodePoolId'))]"
 				}
 			}
 		}, {

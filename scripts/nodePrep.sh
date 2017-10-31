@@ -4,9 +4,8 @@ echo $(date) " - Starting Script"
 USER=$1
 PASSWORD="$2"
 POOL_ID=$3
-GLUSTERFS_ID=$4
 
-echo "$USER - $PASSWORD - $POOL_ID - $GLUSTERFS_ID"
+echo "$USER - $PASSWORD - $POOL_ID"
 
 # Verify that we have access to Red Hat Network
 ITER=0

@@ -24,8 +24,6 @@ if [ -f ./deploy.cfg ]; then
 		OK=1
 	elif test -z $NODE_SUBSCRIPTION_POOL; then
 		OK=1
-	elif test -z $SUBSCRIPTIONGLUSTERFS_POOL; then
-		OK=1
 	elif test -z $LOCATION; then
 		OK=1
         elif test -z $RHN_PASSWORD; then
