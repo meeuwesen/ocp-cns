@@ -739,6 +739,9 @@
 			"apiVersion": "[variables('apiVersionStorage')]",
 			"tags": {
 				"displayName": "PersistentVolume1StorageAccount"
+			},
+			"properties": {
+				"accountType": "[variables('vmSizesMap')[parameters('masterVmSize')].storageAccountType]"
 			}				
 		}, {
 			"type": "Microsoft.Network/publicIPAddresses",

@@ -96,7 +96,7 @@ cat > azuredeploy.parameters.json << EOF
                         "value": "Standard_DS4_v2"
 		},
                 "infraVmSize": {
-                        "value": "Standard_DS3_v2"	
+                        "value": "Standard_DS4_v2"	
                 },
                 "nodeVmSize": {
                         "value": "Standard_DS2_v2"
