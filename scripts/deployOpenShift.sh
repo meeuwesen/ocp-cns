@@ -31,8 +31,8 @@ sed -i -e "s/^# control_path = %(directory)s\/%%h-%%r/control_path = %(directory
 sed -i -e "s/^#host_key_checking = False/host_key_checking = False/" /etc/ansible/ansible.cfg
 sed -i -e "s/^#pty=False/pty=False/" /etc/ansible/ansible.cfg
 
-# Create Ansible Playbook for Post Installation task
-echo $(date) " - Create Ansible Playbook for Post Installation task"
+# Create Ansible Playbooks for Pre Installation tasks
+echo $(date) " - Create Ansible Playbooks for Pre Installation tasks"
 
 # Run on all nodes
 cat > /home/${SUDOUSER}/preinstall.yml <<EOF
@@ -42,7 +42,7 @@ cat > /home/${SUDOUSER}/preinstall.yml <<EOF
   become: yes
   become_method: sudo
   vars:
-    description: "Create OpenShift Users"
+    description: "Copy hosts file"
   tasks:
   - name: copy hosts file
     copy:
@@ -53,10 +53,15 @@ cat > /home/${SUDOUSER}/preinstall.yml <<EOF
       mode: 0644
 EOF
 
-# Run on all masters
+# Create Ansible Playbooks for Post Installation tasks
+echo $(date) " - Create Ansible Playbooks for Post Installation tasks"
+
+# Run on all masters - Create Inital OpenShift User on all Masters
+
 cat > /home/${SUDOUSER}/postinstall.yml <<EOF
 ---
 - hosts: masters
+  gather_facts: no
   remote_user: ${SUDOUSER}
   become: yes
   become_method: sudo
@@ -69,10 +74,12 @@ cat > /home/${SUDOUSER}/postinstall.yml <<EOF
     shell: htpasswd -cb /etc/origin/master/htpasswd ${SUDOUSER} "${PASSWORD}"
 EOF
 
-# Run on only MASTER-0
+# Run on only MASTER-0 - Make initial OpenShift User a Cluster Admin
+
 cat > /home/${SUDOUSER}/postinstall2.yml <<EOF
 ---
 - hosts: nfs
+  gather_facts: no
   remote_user: ${SUDOUSER}
   become: yes
   become_method: sudo
@@ -83,10 +90,12 @@ cat > /home/${SUDOUSER}/postinstall2.yml <<EOF
     shell: oadm policy add-cluster-role-to-user cluster-admin $SUDOUSER --config=/etc/origin/master/admin.kubeconfig
 EOF
 
-# Run on all nodes
+# Run on all nodes - Set Root password on all nodes
+
 cat > /home/${SUDOUSER}/postinstall3.yml <<EOF
 ---
 - hosts: nodes
+  gather_facts: no
   remote_user: ${SUDOUSER}
   become: yes
   become_method: sudo
@@ -114,6 +123,21 @@ cat > /home/${SUDOUSER}/postinstall4.yml <<EOF
       owner: root
       group: root
       mode: 0644
+EOF
+
+# Run on MASTER-0 node - configure Storage Class
+cat > /home/${SUDOUSER}/configurestorageclass.yml <<EOF
+---
+- hosts: master0
+  gather_facts: no
+  remote_user: ${SUDOUSER}
+  become: yes
+  become_method: sudo
+  vars:
+    description: "Create Storage Class"
+  tasks:
+  - name: Create Storage Class with StorageAccountPV1
+    shell: oc create -f /home/${SUDOUSER}/scgeneric1.yml
 EOF
 
 # Create Ansible Hosts File
@@ -202,6 +226,9 @@ $MASTER-0.$DOMAIN
 [lb]
 $BASTION
 
+[master0]
+$MASTER-0
+
 # host group for nodes
 [nodes]
 EOF
@@ -249,16 +276,24 @@ echo $(date) " - Installing OpenShift Container Platform via Ansible Playbook"
 
 runuser -l $SUDOUSER -c "ansible-playbook /usr/share/ansible/openshift-ansible/playbooks/byo/config.yml"
 
+if [ $? -eq 0 ]
+then
+   echo $(date) " - OpenShift Cluster installed successfully"
+else
+   echo $(date) " - OpenShift Cluster failed to install"
+   exit 6
+fi
+
 echo $(date) " - Modifying sudoers"
 
 sed -i -e "s/Defaults    requiretty/# Defaults    requiretty/" /etc/sudoers
 sed -i -e '/Defaults    env_keep += "LC_TIME LC_ALL LANGUAGE LINGUAS _XKB_CHARSET XAUTHORITY"/aDefaults    env_keep += "PATH"' /etc/sudoers
 
 # Deploying Registry
-echo $(date) "- Registry deployed to infra node"
+echo $(date) "- Registry automatically deployed to infra nodes"
 
 # Deploying Router
-echo $(date) "- Router deployed to infra nodes"
+echo $(date) "- Router automaticaly deployed to infra nodes"
 
 echo $(date) "- Re-enabling requiretty"
 
@@ -298,6 +333,15 @@ EOF
 chmod a+r /tmp/atomic-openshift-master
 
 runuser -l $SUDOUSER -c "ansible-playbook ~/postinstall4.yml"
+
+# Create Storage Classes
+echo $(date) "- Creating Storage Classes"
+
+runuser -l $SUDOUSER -c "ansible-playbook ~/configurestorageclass.yml"
+
+echo $(date) "- Sleep for 120"
+
+sleep 120
 
 # OPENSHIFT_DEFAULT_REGISTRY UNSET MAGIC
 for item in ocpm-0 ocpm-1 ocpm-2; do
