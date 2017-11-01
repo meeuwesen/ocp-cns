@@ -4,7 +4,8 @@ echo $(date) " - Starting Script"
 USER=$1
 PASSWORD="$2"
 POOL_ID=$3
-STORAGEACCOUNT1=$4
+SUDOUSER=$4
+STORAGEACCOUNT1=$5
 
 # Verify that we have access to Red Hat Network
 ITER=0
@@ -151,6 +152,7 @@ fi
 
 if hostname -f|grep -- "-0" >/dev/null
 then
+
 cat <<EOF > /home/${SUDOUSER}/scgeneric1.yml
 kind: StorageClass
 apiVersion: storage.k8s.io/v1beta1

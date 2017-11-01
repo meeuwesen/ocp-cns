@@ -15,8 +15,6 @@ BASTION=$(hostname -f)
 
 DOMAIN=$( awk 'NR==2' /etc/resolv.conf | awk '{ print $2 }' )
 
-echo $PASSWORD
-
 # Generate private keys for use by Ansible
 echo $(date) " - Generating Private keys for use by Ansible for OpenShift Installation"
 
@@ -58,7 +56,7 @@ echo $(date) " - Create Ansible Playbooks for Post Installation tasks"
 
 # Run on all masters - Create Inital OpenShift User on all Masters
 
-cat > /home/${SUDOUSER}/postinstall.yml <<EOF
+cat > /home/${SUDOUSER}/addocpuser.yml <<EOF
 ---
 - hosts: masters
   gather_facts: no
@@ -76,7 +74,7 @@ EOF
 
 # Run on only MASTER-0 - Make initial OpenShift User a Cluster Admin
 
-cat > /home/${SUDOUSER}/postinstall2.yml <<EOF
+cat > /home/${SUDOUSER}/assignclusteradminrights.yml <<EOF
 ---
 - hosts: nfs
   gather_facts: no
@@ -92,7 +90,7 @@ EOF
 
 # Run on all nodes - Set Root password on all nodes
 
-cat > /home/${SUDOUSER}/postinstall3.yml <<EOF
+cat > /home/${SUDOUSER}/assignrootpassword.yml <<EOF
 ---
 - hosts: nodes
   gather_facts: no
@@ -149,6 +147,7 @@ cat > /etc/ansible/hosts <<EOF
 masters
 nodes
 etcd
+master0
 nfs
 lb
 
@@ -160,11 +159,12 @@ openshift_install_examples=true
 deployment_type=openshift-enterprise
 docker_udev_workaround=true
 openshift_use_dnsmasq=true
-openshift_disable_check=disk_availability,memory_availability
+
 openshift_master_default_subdomain=$ROUTING
 openshift_override_hostname_check=true
 osm_use_cockpit=true
 os_sdn_network_plugin_name='redhat/openshift-ovs-multitenant'
+openshift_disable_check=disk_availability,memory_availability
 
 openshift_master_cluster_method=native
 openshift_master_cluster_hostname=$BASTION
@@ -302,17 +302,17 @@ sed -i -e "s/# Defaults    requiretty/Defaults    requiretty/" /etc/sudoers
 # Adding user to OpenShift authentication file
 echo $(date) "- Adding OpenShift user"
 
-runuser -l $SUDOUSER -c "ansible-playbook ~/postinstall.yml"
+runuser -l $SUDOUSER -c "ansible-playbook ~/addocpuser.yml"
 
 # Assigning cluster admin rights to OpenShift user
 echo $(date) "- Assigning cluster admin rights to user"
 
-runuser -l $SUDOUSER -c "ansible-playbook ~/postinstall2.yml"
+runuser -l $SUDOUSER -c "ansible-playbook ~/assignclusteradminrights.yml"
 
 # Setting password for Cockpit
 echo $(date) "- Assigning password for root, which is used to login to Cockpit"
 
-runuser -l $SUDOUSER -c "ansible-playbook ~/postinstall3.yml"
+runuser -l $SUDOUSER -c "ansible-playbook ~/assignrootpassword.yml"
 
 # Unset of OPENSHIFT_DEFAULT_REGISTRY. Just the easiest way out.
 cat > /tmp/atomic-openshift-master <<EOF
