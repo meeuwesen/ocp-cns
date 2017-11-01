@@ -667,12 +667,17 @@
 						"[variables('addressPrefix')]"
 					]
 				},
+				"dependsOn": [
+					"[concat('Microsoft.Network/networkSecurityGroups/', variables('openshiftMasterHostname'), '-nsg')]",
+					"[concat('Microsoft.Network/networkSecurityGroups/', variables('openshiftInfraHostname'), '-nsg')]",
+					"[concat('Microsoft.Network/networkSecurityGroups/', variables('openshiftNodeHostname'), '-nsg')]"
+				],
 				"subnets": [{
 					"name": "[variables('masterSubnetName')]",
 					"properties": {
 						"addressPrefix": "[variables('masterSubnetPrefix')]",
 						"networkSecurityGroup": {
-							"id": "[reference(resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftMasterHostname'), '-nsg')))]"
+							"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftMasterHostname'), '-nsg'))]"
 						}
 					}
 				}, {
@@ -680,7 +685,7 @@
 					"properties": {
 						"addressPrefix": "[variables('infraSubnetPrefix')]",
 						"networkSecurityGroup": {
-							"id": "[reference(resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftInfraHostname'), '-nsg')))]"
+							"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftInfraHostname'), '-nsg'))]"
 						}
 					}
 				}, {	
@@ -688,7 +693,7 @@
 					"properties": {
 						"addressPrefix": "[variables('testnodeSubnetPrefix')]",
 						"networkSecurityGroup": {
-							"id": "[reference(resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftNodeHostname'), '-nsg')))]"
+							"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftNodeHostname'), '-nsg'))]"
 						}
 					}
 				}, {
@@ -696,7 +701,7 @@
 					"properties": {
 						"addressPrefix": "[variables('prodnodeSubnetPrefix')]",
 						"networkSecurityGroup": {
-							"id": "[reference(resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftNodeHostname'), '-nsg')))]"
+							"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftNodeHostname'), '-nsg'))]"
 						}
 					}	
 				}]
@@ -955,7 +960,6 @@
 				"displayName": "OpenShiftBastionNetworkInterface"
 			},
 			"dependsOn": [
-				"[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
 				"[concat('Microsoft.Network/networkSecurityGroups/', variables('openshiftBastionHostname'), '-nsg')]"
 			],
 			"properties": {
