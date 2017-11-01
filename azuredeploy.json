@@ -26,7 +26,7 @@
 				"Standard_GS1", "Standard_GS2", "Standard_GS3", "Standard_GS4", "Standard_GS5"
 			],
 			"metadata": {
-				"description": "OpenShift Master VM size"
+				"description": "OpenShift Master Node VM size"
 			}
 		},
 		"infraVmSize": {
@@ -45,7 +45,7 @@
 				"Standard_GS1", "Standard_GS2", "Standard_GS3", "Standard_GS4", "Standard_GS5"
 			],
 			"metadata": {
-				"description": "OpenShift Infra VM size"
+				"description": "OpenShift Infra Node VM size"
 			}
 		},
 		"nodeVmSize": {
@@ -65,7 +65,7 @@
 				"Standard_GS1", "Standard_GS2", "Standard_GS3", "Standard_GS4", "Standard_GS5"
 			],
 			"metadata": {
-				"description": "OpenShift Node VM size"
+				"description": "OpenShift Compute Node VM size"
 			}
 		},
 		"openshiftClusterPrefix": {
@@ -97,7 +97,7 @@
 			"minValue": 1,
 			"allowedValues": [3],
 			"metadata": {
-				"description": "Number of OpenShift master instances."
+				"description": "Number of OpenShift Master Nodes."
 			}
 		},
 		"infraInstanceCount": {
@@ -106,7 +106,7 @@
 			"minValue": 1,
 			"allowedValues": [1, 2, 3, 4, 5],
 			"metadata": {
-				"description": "Number of OpenShift infra nodes."
+				"description": "Number of OpenShift Infra Nodes."
 			}
 		},
 		"testnodeInstanceCount": {
@@ -115,7 +115,7 @@
 			"minValue": 1,
 			"allowedValues": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
 			"metadata": {
-				"description": "Number of OpenShift test environment nodes"
+				"description": "Number of OpenShift test environment Compute Nodes."
 			}
 		},
 		"prodnodeInstanceCount": {
@@ -124,7 +124,7 @@
 			"minValue": 1,
 			"allowedValues": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
 			"metadata": {
-				"description": "Number of OpenShift production environment nodes"
+				"description": "Number of OpenShift production environment Compute Nodes."
 			}
 		},
 		"dataDiskSize": {
@@ -246,7 +246,7 @@
 		"addressPrefix": "192.168.0.0/16",
 		"masterSubnetPrefix": "192.168.1.0/24",
 		"infraSubnetPrefix": "192.168.2.0/24",
-		"nodeSubnetPrefix": "192.168.3.0/24",
+		"testnodeSubnetPrefix": "192.168.3.0/24",
 		"prodnodeSubnetPrefix": "192.168.4.0/24",
 		"virtualNetworkName": "openshiftvnet",
 		"masterSubnetName": "mastersubnet",
@@ -670,34 +670,34 @@
 				"subnets": [{
 					"name": "[variables('masterSubnetName')]",
 					"properties": {
-						"addressPrefix": "[variables('masterSubnetPrefix')]"
-					},
-					"networkSecurityGroup": {
-						"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftMasterHostname'), '-nsg'))]"
+						"addressPrefix": "[variables('masterSubnetPrefix')]",
+						"networkSecurityGroup": {
+							"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftMasterHostname'), '-nsg'))]"
+						}
 					}
 				}, {
 					"name": "[variables('infraSubnetName')]",
 					"properties": {
-						"addressPrefix": "[variables('infraSubnetPrefix')]"
-					},
-					"networkSecurityGroup": {
-						"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftInfraHostname'), '-nsg'))]"
+						"addressPrefix": "[variables('infraSubnetPrefix')]",
+						"networkSecurityGroup": {
+							"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftInfraHostname'), '-nsg'))]"
+						}
 					}
 				}, {	
 					"name": "[variables('testnodeSubnetName')]",
 					"properties": {
-						"addressPrefix": "[variables('nodeSubnetPrefix')]"
-					},
-					"networkSecurityGroup": {
-						"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftNodeHostname'), '-nsg'))]"
+						"addressPrefix": "[variables('testnodeSubnetPrefix')]",
+						"networkSecurityGroup": {
+							"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftNodeHostname'), '-nsg'))]"
+						}
 					}
 				}, {
 					"name": "[variables('prodnodeSubnetName')]",
 					"properties": {
-						"addressPrefix": "[variables('prodnodeSubnetPrefix')]"
-					},
-					"networkSecurityGroup": {
-						"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftProdNodeHostname'), '-nsg'))]"
+						"addressPrefix": "[variables('prodnodeSubnetPrefix')]",
+						"networkSecurityGroup": {
+							"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftNodeHostname'), '-nsg'))]"
+						}
 					}	
 				}]
 			}
