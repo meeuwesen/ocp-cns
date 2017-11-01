@@ -40,7 +40,7 @@
 				"Standard_G1", "Standard_G2", "Standard_G3", "Standard_G4", "Standard_G5",
 				"Standard_DS2", "Standard_DS3", "Standard_DS4",
 				"Standard_DS11", "Standard_DS12", "Standard_DS13", "Standard_DS14",
-				"Standard_DS4_v2", "Standard_DS5_v2",
+				"Standard_DS3_v2", "Standard_DS4_v2", "Standard_DS5_v2",
 				"Standard_DS11_v2", "Standard_DS12_v2", "Standard_DS13_v2", "Standard_DS14_v2",
 				"Standard_GS1", "Standard_GS2", "Standard_GS3", "Standard_GS4", "Standard_GS5"
 			],
@@ -136,15 +136,6 @@
 				"description": "Size of Datadisk in GB for Docker volume"
 			}
 		},
-        "dataDiskSizeCns": {
-            "type": "int",
-            "defaultValue": 20,
-            "minValue": 1,
-            "allowedValues": [20, 30, 40, 50, 60, 70, 80, 90, 100, 128, 512, 1023],
-            "metadata": {
-                "description": "Size of Datadisk in GB for 3x CNS gluster volumes"
-            }
-        },
 		"adminUsername": {
 			"type": "string",
 			"defaultValue": "ocpadmin",
@@ -239,6 +230,7 @@
 		"apiVersionCompute": "2015-06-15",
 		"apiVersionNetwork": "2016-03-30",
 		"apiVersionStorage": "2015-06-15",
+		"apiVersionStorage2": "2017-06-01",
 		"apiVersionLinkTemplate": "2015-01-01",
 		"namingInfix": "[toLower(parameters('openshiftClusterPrefix'))]",
 		"openshiftBastionHostname": "[concat(variables('namingInfix'), 'b')]",
@@ -735,13 +727,14 @@
 			"type": "Microsoft.Storage/storageAccounts",
 			"name": "[variables('newStorageAccountPersistentVolume1')]",
 			"location": "[variables('location')]",
+			"apiVersion": "[variables('apiVersionStorage2')]",
 			"kind": "Storage",
-			"apiVersion": "[variables('apiVersionStorage')]",
 			"tags": {
-				"displayName": "PersistentVolume1StorageAccount"
+				"displayName": "PersistentVolume1Storage"
 			},
-			"properties": {
-				"accountType": "[variables('vmSizesMap')[parameters('masterVmSize')].storageAccountType]"
+			"sku": {
+				"name": "Standard_LRS",
+				"tier": "Standard"
 			}				
 		}, {
 			"type": "Microsoft.Network/publicIPAddresses",
