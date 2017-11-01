@@ -667,42 +667,25 @@
 						"[variables('addressPrefix')]"
 					]
 				},
-				"dependsOn": [
-					"[concat('Microsoft.Network/networkSecurityGroups/', variables('openshiftMasterHostname'), '-nsg')]",
-					"[concat('Microsoft.Network/networkSecurityGroups/', variables('openshiftInfraHostname'), '-nsg')]",
-					"[concat('Microsoft.Network/networkSecurityGroups/', variables('openshiftNodeHostname'), '-nsg')]"
-				],
 				"subnets": [{
 					"name": "[variables('masterSubnetName')]",
 					"properties": {
-						"addressPrefix": "[variables('masterSubnetPrefix')]",
-						"networkSecurityGroup": {
-							"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftMasterHostname'), '-nsg'))]"
-						}
+						"addressPrefix": "[variables('masterSubnetPrefix')]"
 					}
 				}, {
 					"name": "[variables('infraSubnetName')]",
 					"properties": {
-						"addressPrefix": "[variables('infraSubnetPrefix')]",
-						"networkSecurityGroup": {
-							"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftInfraHostname'), '-nsg'))]"
-						}
+						"addressPrefix": "[variables('infraSubnetPrefix')]"
 					}
 				}, {	
 					"name": "[variables('testnodeSubnetName')]",
 					"properties": {
-						"addressPrefix": "[variables('testnodeSubnetPrefix')]",
-						"networkSecurityGroup": {
-							"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftNodeHostname'), '-nsg'))]"
-						}
+						"addressPrefix": "[variables('testnodeSubnetPrefix')]"
 					}
 				}, {
 					"name": "[variables('prodnodeSubnetName')]",
 					"properties": {
-						"addressPrefix": "[variables('prodnodeSubnetPrefix')]",
-						"networkSecurityGroup": {
-							"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftNodeHostname'), '-nsg'))]"
-						}
+						"addressPrefix": "[variables('prodnodeSubnetPrefix')]"
 					}	
 				}]
 			}
@@ -960,6 +943,7 @@
 				"displayName": "OpenShiftBastionNetworkInterface"
 			},
 			"dependsOn": [
+				"[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
 				"[concat('Microsoft.Network/networkSecurityGroups/', variables('openshiftBastionHostname'), '-nsg')]"
 			],
 			"properties": {
@@ -1014,7 +998,10 @@
 							}
 						]
 					}
-				}]
+				}],
+				"networkSecurityGroup": {
+					"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftMasterHostname'), '-nsg'))]"
+				}
 			}
 		}, {
 			"type": "Microsoft.Network/networkInterfaces",
@@ -1045,7 +1032,10 @@
 							"id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/loadBalancers/', variables('infraLoadBalancerName'), '/backendAddressPools/loadBalancerBackEnd')]"
 						}]
 					}
-				}]
+				}],
+				"networkSecurityGroup": {
+					"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftInfraHostname'), '-nsg'))]"
+				}
 			}
 		}, {
 			"type": "Microsoft.Network/networkInterfaces",
@@ -1072,7 +1062,10 @@
 							"id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'), '/subnets/', variables('testnodeSubnetName'))]"
 						}
 					}
-				}]
+				}],
+				"networkSecurityGroup": {
+					"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftNodeHostname'), '-nsg'))]"
+				}
 			}
 		}, {
 			"type": "Microsoft.Network/networkInterfaces",
@@ -1099,7 +1092,10 @@
 							"id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'), '/subnets/', variables('prodnodeSubnetName'))]"
 						}
 					}
-				}]
+				}],
+				"networkSecurityGroup": {
+					"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftNodeHostname'), '-nsg'))]"
+				}
 			}	
 		}, {
 			"type": "Microsoft.Compute/virtualMachines",
