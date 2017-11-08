@@ -42,11 +42,18 @@
 				"description": "OpenShift Master VM public IP address"
 			}
 		},
-		"openshiftInfraHostname": {
+		"openshiftInfraPublicHostname": {
 			"type": "string",
 			"minLength": 1,
 			"metadata": {
-				"description": "OpenShift Infra hostname"
+				"description": "OpenShift Public Infra hostname"
+			}
+		},
+		"openshiftInfraRestrictedHostname": {
+			"type": "string",
+			"minLength": 1,
+			"metadata": {
+				"description": "OpenShift Restricted Infra hostname"
 			}
 		},
 		"openshiftTestNodeHostname": {
