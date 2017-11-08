@@ -776,7 +776,21 @@
 				"dnsSettings": {
 					"domainNameLabel": "[parameters('infraPublicLbPublicIpDnsLabel')]"
 				}
-			}	
+			}
+		}, {
+			"type": "Microsoft.Network/publicIPAddresses",
+			"name": "[parameters('infraRestrictedLbPublicIpDnsLabel')]",
+			"location": "[variables('location')]",
+			"apiVersion": "[variables('apiVersionNetwork')]",
+			"tags": {
+				"displayName": "OpenShiftInfraRestrictedLBPublicIP"
+			},
+			"properties": {
+				"publicIPAllocationMethod": "Static",
+				"dnsSettings": {
+					"domainNameLabel": "[parameters('infraRestrictedLbPublicIpDnsLabel')]"
+				}
+			}
 		}, {
 			"type": "Microsoft.Compute/availabilitySets",
 			"name": "masteravailabilityset",
@@ -853,27 +867,6 @@
 					}
 				}]
 			}
-		}, {						
-			"type": "Microsoft.Network/loadBalancers/inboundNatRules",
-			"name": "[concat(variables('masterLoadBalancerName'), '/', 'SSH-', variables('openshiftMasterHostname'), copyIndex())]",			
-			"location": "[variables('location')]",
-			"apiVersion": "[variables('apiVersionNetwork')]",
-			"copy": {
-				"name": "masterLbLoop",
-				"count": "[parameters('masterInstanceCount')]"
-			},
-			"dependsOn": [
-				"[variables('masterLbId')]"
-			],
-			"properties": {
-				"frontendIPConfiguration": {
-					"id": "[variables('masterLbFrontEndConfigId')]"
-				},
-				"protocol": "tcp",
-				"frontendPort": "[copyIndex(2200)]",
-				"backendPort": 22,
-				"enableFloatingIP": false
-			}
 		}, {
 			"type": "Microsoft.Network/loadBalancers",
 			"name": "[variables('infraPublicLoadBalancerName')]",
@@ -949,6 +942,81 @@
 				}]
 			}
 		}, {
+			"type": "Microsoft.Network/loadBalancers",
+			"name": "[variables('infraRestrictedLoadBalancerName')]",
+			"location": "[variables('location')]",
+			"apiVersion": "[variables('apiVersionNetwork')]",
+			"tags": {
+				"displayName": "OpenShiftInfraRestrictedLB"
+			},
+			"dependsOn": [
+				"[concat('Microsoft.Network/publicIPAddresses/', parameters('infraRestrictedLbPublicIpDnsLabel'))]"
+			],
+			"properties": {
+				"frontendIPConfigurations": [{
+					"name": "LoadBalancerFrontEnd",
+					"properties": {
+						"publicIPAddress": {
+							"id": "[variables('infraRestrictedPublicIpAddressId')]"
+						}
+					}
+				}],
+				"backendAddressPools": [{
+					"name": "loadBalancerBackEnd"
+				}],
+				"loadBalancingRules": [{
+					"name": "OpenShiftRouterHTTP",
+					"properties": {
+						"frontendIPConfiguration": {
+							"id": "[variables('infraRestrictedLbFrontEndConfigId')]"
+						},
+						"backendAddressPool": {
+							"id": "[variables('infraRestrictedLbBackendPoolId')]"
+						},
+						"protocol": "Tcp",
+						"frontendPort": 80,
+						"backendPort": 80,
+						"probe": {
+							"id": "[variables('infraRestrictedLbHttpProbeId')]"
+						}
+					}
+				}, {
+					"name": "OpenShiftRouterHTTPS",
+					"properties": {
+						"frontendIPConfiguration": {
+							"id": "[variables('infraRestrictedLbFrontEndConfigId')]"
+						},
+						"backendAddressPool": {
+							"id": "[variables('infraRestrictedLbBackendPoolId')]"
+						},
+						"protocol": "Tcp",
+						"frontendPort": 443,
+						"backendPort": 443,
+						"probe": {
+							"id": "[variables('infraRestrictedLbHttpsProbeId')]"
+						}
+					}
+				}],
+				"probes": [{
+					"name": "httpProbe",
+					"properties": {
+						"protocol": "Tcp",
+						"port": 80,
+						"intervalInSeconds": 5,
+						"numberOfProbes": 2
+					}
+				}, {
+					"name": "httpsProbe",
+					"properties": {
+						"protocol": "Tcp",
+						"port": 443,
+						"intervalInSeconds": 5,
+						"numberOfProbes": 2
+					}
+				}]
+			}
+				
+		}, {
 			"type": "Microsoft.Network/networkInterfaces",
 			"name": "[concat(variables('openshiftBastionHostname'), 'nic')]",
 			"location": "[variables('location')]",
@@ -988,7 +1056,6 @@
 			"dependsOn": [
 				"[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
 				"[concat('Microsoft.Network/loadBalancers/', variables('masterLoadBalancerName'))]",
-				"[concat(variables('masterLbId'), '/inboundNatRules/SSH-', variables('openshiftMasterHostname') ,copyIndex())]",
 				"[concat('Microsoft.Network/networkSecurityGroups/', variables('openshiftMasterHostname'), '-nsg')]"
 			],
 			"copy": {
@@ -1005,12 +1072,7 @@
 						},
 						"loadBalancerBackendAddressPools": [{
 							"id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/loadBalancers/', variables('masterLoadBalancerName'), '/backendAddressPools/loadBalancerBackEnd')]"
-						}],
-						"loadBalancerInboundNatRules": [
-							{
-								"id": "[concat(variables('masterLbId'),'/inboundNatRules/SSH-', variables('openshiftMasterHostname'), copyIndex())]"
-							}
-						]
+						}]
 					}
 				}],
 				"networkSecurityGroup": {
@@ -1023,7 +1085,7 @@
 			"location": "[variables('location')]",
 			"apiVersion": "[variables('apiVersionNetwork')]",
 			"tags": {
-				"displayName": "OpenShiftInfraNetworkInterfaces"
+				"displayName": "OpenShiftInfraPublicNetworkInterfaces"
 			},
 			"dependsOn": [
 				"[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
@@ -1044,6 +1106,40 @@
 						},
 						"loadBalancerBackendAddressPools": [{
 							"id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/loadBalancers/', variables('infraPublicLoadBalancerName'), '/backendAddressPools/loadBalancerBackEnd')]"
+						}]
+					}
+				}],
+				"networkSecurityGroup": {
+					"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftInfraHostname'), '-nsg'))]"
+				}
+			}
+		}, {
+			"type": "Microsoft.Network/networkInterfaces",
+			"name": "[concat(variables('openshiftInfraRestrictedHostname'), copyIndex(), 'nic')]",
+			"location": "[variables('location')]",
+			"apiVersion": "[variables('apiVersionNetwork')]",
+			"tags": {
+				"displayName": "OpenShiftInfraRestrictedNetworkInterfaces"
+			},
+			"dependsOn": [
+				"[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
+				"[concat('Microsoft.Network/loadBalancers/', variables('infraRestrictedLoadBalancerName'))]",
+				"[concat('Microsoft.Network/networkSecurityGroups/', variables('openshiftInfraHostname'), '-nsg')]"
+			],
+			"copy": {
+				"name": "infraRestrictedNicLoop",
+				"count": "[parameters('infraInstanceCount')]"
+			},
+			"properties": {
+				"ipConfigurations": [{
+					"name": "[concat(variables('openshiftInfraRestrictedHostname'), copyIndex(), 'ipconfig')]",
+					"properties": {
+						"privateIPAllocationMethod": "Dynamic",
+						"subnet": {
+							"id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'), '/subnets/', variables('infraSubnetName'))]"
+						},
+						"loadBalancerBackendAddressPools": [{
+							"id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/loadBalancers/', variables('infraRestrictedLoadBalancerName'), '/backendAddressPools/loadBalancerBackEnd')]"
 						}]
 					}
 				}],
@@ -1283,6 +1379,68 @@
 			}
 		}, {
 			"type": "Microsoft.Compute/virtualMachines",
+			"name": "[concat(variables('openshiftInfraRestrictedHostname'), '-', copyIndex())]",
+			"location": "[variables('location')]",
+			"apiVersion": "[variables('apiVersionCompute')]",
+			"tags": {
+				"displayName": "OpenShiftInfraRestrictedNodes"
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Storage/storageAccounts', variables('newStorageAccountMaster'))]",
+				"[concat('Microsoft.Network/networkInterfaces/', variables('openshiftInfraRestrictedHostname'), copyIndex(), 'nic')]"
+			],
+			"copy": {
+				"name": "infraRestrictedLoop",
+				"count": "[parameters('infraInstanceCount')]"
+			},
+			"properties": {
+				"availabilitySet": {
+					"id": "[resourceId('Microsoft.Compute/availabilitySets', 'infraavailabilityset')]"
+				},
+				"hardwareProfile": {
+					"vmSize": "[parameters('infraVmSize')]"
+				},
+				"osProfile": {
+					"computerName": "[concat(variables('openshiftInfraRestrictedHostname'), '-', copyIndex())]",
+					"adminUsername": "[parameters('adminUsername')]",
+					"linuxConfiguration": {
+						"disablePasswordAuthentication": true,
+						"ssh": {
+							"publicKeys": [{
+								"path": "[variables('sshKeyPath')]",
+								"keyData": "[parameters('sshPublicKey')]"
+							}]
+						}
+					}
+				},
+				"storageProfile": {
+					"imageReference": "[variables('imageReference')]",
+					"osDisk": {
+						"name": "[concat(variables('openshiftInfraRestrictedHostname'), copyIndex(), 'osdisk')]",
+						"vhd": {
+							"uri": "[concat(concat(reference(resourceId(resourceGroup().name, 'Microsoft.Storage/storageAccounts', variables('newStorageAccountMaster')), variables('apiVersionStorage')).primaryEndpoints['blob'], 'vhds/'), variables('openshiftInfraRestrictedHostname'), copyIndex(), '.vhd')]"
+						},
+						"caching": "ReadWrite",
+						"createOption": "FromImage"
+					},
+					"dataDisks": [{
+						"name": "[concat(variables('openshiftInfraRestrictedHostname'), copyIndex(), '-docker-pool')]",
+						"diskSizeGB": "[parameters('dataDiskSize')]",
+						"lun": 0,
+						"vhd": {
+							"uri": "[concat(concat(reference(resourceId(resourceGroup().name, 'Microsoft.Storage/storageAccounts', variables('newStorageAccountMaster')), variables('apiVersionStorage')).primaryEndpoints['blob'], 'vhds/'), variables('openshiftInfraRestrictedHostname'), copyIndex(), 'docker-pool.vhd')]"
+						},
+							"createOption": "Empty"
+					}]
+				},
+				"networkProfile": {
+					"networkInterfaces": [{
+						"id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('openshiftInfraRestrictedHostname'), copyIndex(), 'nic'))]"
+					}]
+				}
+			}				
+		}, {
+			"type": "Microsoft.Compute/virtualMachines",
 			"name": "[concat(variables('openshiftTestNodeHostname'), '-', copyIndex())]",
 			"location": "[variables('location')]",
 			"apiVersion": "[variables('apiVersionCompute')]",
@@ -1490,6 +1648,35 @@
 			}
 		}, {
 			"type": "Microsoft.Compute/virtualMachines/extensions",
+			"name": "[concat(variables('openshiftInfraRestrictedHostname'), '-', copyIndex(), '/prepNodes')]",
+			"location": "[variables('location')]",
+			"apiVersion": "[variables('apiVersionCompute')]",
+			"tags": {
+				"displayName": "PrepRestrictedInfra"
+			},
+			"dependsOn": [
+				"[concat('Microsoft.Compute/virtualMachines/', variables('openshiftInfraRestrictedHostname'), '-', copyIndex())]"
+			],
+			"copy": {
+				"name": "infraRestrictedPrepLoop",
+				"count": "[parameters('infraInstanceCount')]"
+			},
+			"properties": {
+				"publisher": "Microsoft.Azure.Extensions",
+				"type": "CustomScript",
+				"typeHandlerVersion": "2.0",
+				"autoUpgradeMinorVersion": true,
+				"settings": {
+					"fileUris": [
+						"[variables('nodePrepScriptUrl')]"
+					]
+				},
+				"protectedSettings": {
+					"commandToExecute": "[concat('bash ', variables('nodePrepScriptFileName'), ' ', parameters('cloudAccessUsername'), ' ', variables('singlequote'), parameters('cloudAccessPassword'), variables('singlequote'), ' ', parameters('cloudAccessInfraPoolId'))]"
+				}
+			}	
+		}, {
+			"type": "Microsoft.Compute/virtualMachines/extensions",
 			"name": "[concat(variables('openshiftTestNodeHostname'), '-', copyIndex(), '/prepNodes')]",
 			"location": "[variables('location')]",
 			"apiVersion": "[variables('apiVersionCompute')]",
@@ -1553,6 +1740,7 @@
 			"dependsOn": [
 				"masterPrepLoop",
 				"infraPublicPrepLoop",
+				"infraRestrictedPrepLoop",
 				"testnodePrepLoop",
 				"prodnodePrepLoop"
 			],
