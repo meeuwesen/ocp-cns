@@ -8,7 +8,7 @@
 				"description": "Base URL for Template Files",
 				"artifactsBaseUrl": ""
 			},
-			"defaultValue": "https://raw.githubusercontent.com/maalbers/ocp-cns/Subnets/"
+			"defaultValue": "https://raw.githubusercontent.com/maalbers/ocp-cns/Final/"
 		},
 		"masterVmSize": {
 			"type": "string",
@@ -84,11 +84,18 @@
 				"description": "OpenShift Master Load Balancer public IP DNS name (hostname portion). Must be lowercase. It should match with the following regular expression: ^[a-z][a-z0-9-]{1,61}[a-z0-9]$ or it will raise an error."
 			}
 		},
-		"infraLbPublicIpDnsLabel": {
+		"infraPublicLbPublicIpDnsLabel": {
 			"type": "string",
 			"minLength": 1,
 			"metadata": {
-				"description": "OpenShift Infra Nodes Load Balancer public IP DNS name (hostname portion). Must be lowercase. It should match with the following regular expression: ^[a-z][a-z0-9-]{1,61}[a-z0-9]$ or it will raise an error."
+				"description": "OpenShift Public Infra Nodes Load Balancer public IP DNS name (hostname portion). Must be lowercase. It should match with the following regular expression: ^[a-z][a-z0-9-]{1,61}[a-z0-9]$ or it will raise an error."
+			}
+		},
+		"infraRestrictedLbPublicIpDnsLabel": {
+			"type": "string",
+			"minLength": 1,
+			"metadata": {
+				"description": "OpenShift Restricted Infra Nodes Load Balancer public IP DNS name (hostname portion). Must be lowercase. It should match with the following regular expression: ^[a-z][a-z0-9-]{1,61}[a-z0-9]$ or it will raise an error."
 			}
 		},
 		"masterInstanceCount": {
@@ -236,9 +243,9 @@
 		"openshiftBastionHostname": "[concat(variables('namingInfix'), 'b')]",
 		"openshiftMasterHostname": "[concat(variables('namingInfix'), 'm')]",
 		"openshiftInfraHostname": "[concat(variables('namingInfix'), 'i')]",
-		"openshiftInfraPublicHostname": "[concat(variables('openshiftInfraHostname'), 'p')]",
-		"openshiftInfraRestrictedHostname": "[concat(variables('openshiftInfraHostname'), 'r')]",
 		"openshiftNodeHostname": "[concat(variables('namingInfix'), 'n')]",
+		"openshiftInfraPublicHostname": "[concat(variables('openshiftInfraHostname'), 'p')]",
+		"openshiftInfraRestrictedHostname": "[concat(variables('openshiftInfraHostname'), 'r')]",		
 		"openshiftTestNodeHostname": "[concat(variables('openshiftNodeHostname'), 't')]",
 		"openshiftProdNodeHostname": "[concat(variables('openshiftNodeHostname'), 'p')]",
 		"newStorageAccountMaster": "[concat(uniqueString(concat(resourceGroup().id, 'msa', '0')), 'msa')]",
@@ -265,12 +272,20 @@
 		"masterLb8443ProbeId": "[concat(variables('masterLbId'),'/probes/8443Probe')]",
 		
 		"infraPublicLoadBalancerName": "[concat(variables('openshiftInfraPublicHostname'), 'lb')]",
-		"infraPublicPublicIpAddressId": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('infraLbPublicIpDnsLabel'))]",
+		"infraPublicPublicIpAddressId": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('infraPublicLbPublicIpDnsLabel'))]",
 		"infraPublicLbId": "[resourceId('Microsoft.Network/loadBalancers', variables('infraPublicLoadBalancerName'))]",
 		"infraPublicLbFrontEndConfigId": "[concat(variables('infraPublicLbId'), '/frontendIPConfigurations/loadBalancerFrontEnd')]",
 		"infraPublicLbBackendPoolId": "[concat(variables('infraPublicLbId'),'/backendAddressPools/loadBalancerBackend')]",
 		"infraPublicLbHttpProbeId": "[concat(variables('infraPublicLbId'),'/probes/httpProbe')]",
 		"infraPublicLbHttpsProbeId": "[concat(variables('infraPublicLbId'),'/probes/httpsProbe')]",
+
+		"infraRestrictedLoadBalancerName": "[concat(variables('openshiftInfraRestrictedHostname'), 'lb')]",
+		"infraRestrictedPublicIpAddressId": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('infraRestrictedLbPublicIpDnsLabel'))]",
+		"infraRestrictedLbId": "[resourceId('Microsoft.Network/loadBalancers', variables('infraRestrictedLoadBalancerName'))]",
+		"infraRestrictedLbFrontEndConfigId": "[concat(variables('infraRestrictedLbId'), '/frontendIPConfigurations/loadBalancerFrontEnd')]",
+		"infraRestrictedLbBackendPoolId": "[concat(variables('infraRestrictedLbId'),'/backendAddressPools/loadBalancerBackend')]",
+		"infraRestrictedLbHttpProbeId": "[concat(variables('infraRestrictedLbId'),'/probes/httpProbe')]",
+		"infraRestrictedLbHttpsProbeId": "[concat(variables('infraRestrictedLbId'),'/probes/httpsProbe')]",
 		
 		"osType": {
 			"publisher": "RedHat",
@@ -736,20 +751,6 @@
 			}
 		}, {
 			"type": "Microsoft.Network/publicIPAddresses",
-			"name": "[parameters('infraLbPublicIpDnsLabel')]",
-			"location": "[variables('location')]",
-			"apiVersion": "[variables('apiVersionNetwork')]",
-			"tags": {
-				"displayName": "OpenShiftInfraLBPublicIP"
-			},
-			"properties": {
-				"publicIPAllocationMethod": "Static",
-				"dnsSettings": {
-					"domainNameLabel": "[parameters('infraLbPublicIpDnsLabel')]"
-				}
-			}
-		}, {
-			"type": "Microsoft.Network/publicIPAddresses",
 			"name": "[parameters('openshiftMasterPublicIpDnsLabel')]",
 			"location": "[variables('location')]",
 			"apiVersion": "[variables('apiVersionNetwork')]",
@@ -762,6 +763,20 @@
 					"domainNameLabel": "[parameters('openshiftMasterPublicIpDnsLabel')]"
 				}
 			}
+		}, {
+			"type": "Microsoft.Network/publicIPAddresses",
+			"name": "[parameters('infraPublicLbPublicIpDnsLabel')]",
+			"location": "[variables('location')]",
+			"apiVersion": "[variables('apiVersionNetwork')]",
+			"tags": {
+				"displayName": "OpenShiftInfraPublicLBPublicIP"
+			},
+			"properties": {
+				"publicIPAllocationMethod": "Static",
+				"dnsSettings": {
+					"domainNameLabel": "[parameters('infraPublicLbPublicIpDnsLabel')]"
+				}
+			}	
 		}, {
 			"type": "Microsoft.Compute/availabilitySets",
 			"name": "masteravailabilityset",
@@ -865,10 +880,10 @@
 			"location": "[variables('location')]",
 			"apiVersion": "[variables('apiVersionNetwork')]",
 			"tags": {
-				"displayName": "OpenShiftInfraLB"
+				"displayName": "OpenShiftInfraPublicLB"
 			},
 			"dependsOn": [
-				"[concat('Microsoft.Network/publicIPAddresses/', parameters('infraLbPublicIpDnsLabel'))]"
+				"[concat('Microsoft.Network/publicIPAddresses/', parameters('infraPublicLbPublicIpDnsLabel'))]"
 			],
 			"properties": {
 				"frontendIPConfigurations": [{
@@ -1016,7 +1031,7 @@
 				"[concat('Microsoft.Network/networkSecurityGroups/', variables('openshiftInfraHostname'), '-nsg')]"
 			],
 			"copy": {
-				"name": "infraNicLoop",
+				"name": "infraPublicNicLoop",
 				"count": "[parameters('infraInstanceCount')]"
 			},
 			"properties": {
@@ -1210,14 +1225,14 @@
 			"location": "[variables('location')]",
 			"apiVersion": "[variables('apiVersionCompute')]",
 			"tags": {
-				"displayName": "OpenShiftInfraNodes"
+				"displayName": "OpenShiftInfraPublicNodes"
 			},
 			"dependsOn": [
 				"[resourceId('Microsoft.Storage/storageAccounts', variables('newStorageAccountMaster'))]",
 				"[concat('Microsoft.Network/networkInterfaces/', variables('openshiftInfraPublicHostname'), copyIndex(), 'nic')]"
 			],
 			"copy": {
-				"name": "infraLoop",
+				"name": "infraPublicLoop",
 				"count": "[parameters('infraInstanceCount')]"
 			},
 			"properties": {
@@ -1597,7 +1612,7 @@
 						"value": "[parameters('openshiftPassword')]"
 					},
 					"xipioDomain": {
-						"value": "[concat(reference(parameters('infraLbPublicIpDnsLabel')).ipAddress, '.nip.io')]"
+						"value": "[concat(reference(parameters('infraPublicLbPublicIpDnsLabel')).ipAddress, '.nip.io')]"
 					},
 					"customDomain": {
 						"value": "[parameters('defaultSubDomain')]"
@@ -1622,13 +1637,14 @@
 			"type": "string",
 			"value": "[concat('https://', reference(parameters('openshiftMasterPublicIpDnsLabel')).dnsSettings.fqdn, ':8443/console')]"
 		},
-		"openshiftMasterSsh": {
+		"openshiftInfraPublicLoadBalancerFQDN": {
 			"type": "string",
-			"value": "[concat('ssh ', parameters('adminUsername'), '@', reference(parameters('openshiftMasterPublicIpDnsLabel')).dnsSettings.fqdn, ' -p 2200')]"
+			"value": "[reference(parameters('infraPublicLbPublicIpDnsLabel')).dnsSettings.fqdn]"
 		},
-		"openshiftInfraLoadBalancerFQDN": {
+		"openshiftInfraRestrictedLoadBalancerFQDN": {
 			"type": "string",
-			"value": "[reference(parameters('infraLbPublicIpDnsLabel')).dnsSettings.fqdn]"
+			"value": "[reference(parameters('infraRestrictedLbPublicIpDnsLabel')).dnsSettings.fqdn]"
+
 		}
 	}
 }
