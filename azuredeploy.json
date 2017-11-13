@@ -287,7 +287,6 @@
 			"version": "latest"
 		},
 		"imageReference": "[variables('osType')]",
-		"singlequote": "'",
 		"sshKeyPath": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
 		"bastionPrepScriptUrl": "[concat(parameters('_artifactsLocation'), 'scripts/bastionPrep.sh')]",
 		"nodePrepScriptUrl": "[concat(parameters('_artifactsLocation'), 'scripts/nodePrep.sh')]",
@@ -792,10 +791,16 @@
 			"properties": {}
 		}, {
 			"type": "Microsoft.Compute/availabilitySets",
-			"name": "infraavailabilityset",
+			"name": "infrapublicavailabilityset",
 			"location": "[variables('location')]",
 			"apiVersion": "[variables('apiVersionCompute')]",
 			"properties": {}
+		}, {
+			"type": "Microsoft.Compute/availabilitySets",
+			"name": "infrarestrictedavailabilityset",
+			"location": "[variables('location')]",
+			"apiVersion": "[variables('apiVersionCompute')]",
+			"properties": {}	
 		}, {
 			"type": "Microsoft.Compute/availabilitySets",
 			"name": "testnodeavailabilityset",
@@ -1325,7 +1330,7 @@
 			},
 			"properties": {
 				"availabilitySet": {
-					"id": "[resourceId('Microsoft.Compute/availabilitySets', 'infraavailabilityset')]"
+					"id": "[resourceId('Microsoft.Compute/availabilitySets', 'infrapublicavailabilityset')]"
 				},
 				"hardwareProfile": {
 					"vmSize": "[parameters('infraVmSize')]"
@@ -1387,7 +1392,7 @@
 			},
 			"properties": {
 				"availabilitySet": {
-					"id": "[resourceId('Microsoft.Compute/availabilitySets', 'infraavailabilityset')]"
+					"id": "[resourceId('Microsoft.Compute/availabilitySets', 'infrarestrictedavailabilityset')]"
 				},
 				"hardwareProfile": {
 					"vmSize": "[parameters('infraVmSize')]"

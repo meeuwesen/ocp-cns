@@ -235,9 +235,12 @@ EOF
 for node in ocpm-{0..3}; do
 	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'master\', \'zone\': \'default\'}\"
 done|grep ocpm >>/etc/ansible/hosts
-for node in ocpi-{0..10}; do
+for node in ocpip-{0..10}; do
 	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\'}\"
-done|grep ocpi >>/etc/ansible/hosts
+done|grep ocpip >>/etc/ansible/hosts
+for node in ocpir-{0..10}; do
+	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\'}\"
+done|grep ocpir >>/etc/ansible/hosts
 for node in ocpnt-{0..30}; do
 	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\', \'environment\': \'test\'}\"
 done|grep ocpnt >>/etc/ansible/hosts
@@ -253,7 +256,11 @@ for node in ocpm-0 ocpm-1 ocpm-2; do
 	ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $3 " " $2  }'|sed -e 's/(//' -e 's/)//'i -e "s/.net/.net $node/"
 done
 
-for node in ocpi-{0..5}; do
+for node in ocpip-{0..5}; do
+	ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $3 " " $2  }'|sed -e 's/(//' -e 's/)//' -e "s/.net/.net $node/"
+done
+
+for node in ocpir-{0..5}; do
 	ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $3 " " $2  }'|sed -e 's/(//' -e 's/)//' -e "s/.net/.net $node/"
 done
 
