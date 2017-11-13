@@ -103,8 +103,11 @@ cat > azuredeploy.parameters.json << EOF
 		"openshiftMasterPublicIpDnsLabel": {
 			"value": "$MASTER_DNS"
 		},
-		"infraLbPublicIpDnsLabel": {
-			"value": "$INFRA_DNS"
+		"infraPublicLbPublicIpDnsLabel": {
+			"value": "${INFRA_DNS}p"
+		},
+		"infraRestrictedLbPublicIpDnsLabel": {
+			"value": "${INFRA_DNS}r"
 		},
 		"masterInstanceCount": {
 			"value": $MASTERCOUNT
