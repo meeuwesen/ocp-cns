@@ -14,23 +14,19 @@ fi
 OK=0
 if [ -f ./deploy.cfg ]; then
 	. ./deploy.cfg
-	if test -z $RHN_ACCOUNT; then
-		OK=1
-	elif test -z $OCP_USER; then
+	if test -z $OCP_USER; then
 		OK=1
 	elif test -z $OCP_PASSWORD; then
 		OK=1
-	elif test -z $INFRA_SUBSCRIPTION_POOL; then
+	elif test -z $RHN_ORGANIZATIONID; then
 		OK=1
-	elif test -z $NODE_SUBSCRIPTION_POOL; then
+	elif test -z $RHN_ACTIVATIONKEY_INFRA; then
+		OK=1
+	elif test -z $RHN_ACTIVATIONKEY_CNODES; then
 		OK=1
 	elif test -z $LOCATION; then
 		OK=1
-        elif test -z $RHN_PASSWORD; then
-                echo "Please type your red hat password, finish with [enter]:"
-                read -s
-                RHN_PASSWORD=$REPLY
-	fi
+        fi
         if test -z $MASTER_DNS; then
                 MASTER_DNS="${GROUP}master"
                         if dig $MASTER_DNS.${LOCATION}.cloudapp.azure.com|grep -v ";"|grep "IN A"|awk '{ print $5 }'|grep [0-9] >/dev/null; then
@@ -131,17 +127,14 @@ cat > azuredeploy.parameters.json << EOF
 		"openshiftPassword": {
 			"value": "$OCP_PASSWORD"
 		},
-		"cloudAccessUsername": {
-			"value": "$RHN_ACCOUNT"
+		"rhnOrganizationID": {
+			"value": "$RHN_ORGANIZATIONID"
 		},
-		"cloudAccessPassword": {
-			"value": "$RHN_PASSWORD"
+		"rhnActivationKeyInfra": {
+			"value": "$RHN_ACTIVATIONKEY_INFRA"
 		},
-		"cloudAccessInfraPoolId": {
-			"value": "$INFRA_SUBSCRIPTION_POOL"
-		},
-		"cloudAccessNodePoolId": {
-			"value": "$NODE_SUBSCRIPTION_POOL"
+		"rhnActivationKeyCNodes": {
+			"value": "$RHN_ACTIVATIONKEY_CNODES"
 		},
 		"sshPublicKey": {
 			"value": "$PUBLIC_SSH_KEY"

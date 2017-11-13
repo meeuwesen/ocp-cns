@@ -158,32 +158,25 @@
 				"description": "Password for OpenShift user to login to OpenShift Console"
 			}
 		},
-		"cloudAccessUsername": {
+		"rhnOrganizationID": {
 			"type": "string",
 			"minLength": 1,
 			"metadata": {
-				"description": "Red Hat Cloud Access Username (login credentials for access.redhat.com)"
+				"description": "Red Hat Organization ID"
 			}
 		},
-		"cloudAccessPassword": {
-			"type": "securestring",
-			"minLength": 1,
-			"metadata": {
-				"description": "Cloud Access password (login credentials for access.redhat.com)"
-			}
-		},
-		"cloudAccessInfraPoolId": {
+		"rhnActivationKeyInfra": {
 			"type": "string",
 			"minLength": 1,
 			"metadata": {
-				"description": "Pool ID with OpenShift Master/Infra/Broker entitlements (To find it, run on registered server: subscription-manager list)"
+				"description": "Red Hat Activation Key for Openshift Master/Infra/Broker entitlements"
 			}
 		},
-		"cloudAccessNodePoolId": {
+		"rhnActivationKeyCNodes": {
 			"type": "string",
 			"minLength": 1,
 			"metadata": {
-				"description": "Pool ID with OpenShift Compute Node entitlements (To find it, run on registered server: subscription-manager list)"
+				"description": "Red Hat Activation Key for OpenShift Compute Node entitlements"
 			}
 		},
 		"sshPublicKey": {
@@ -1014,8 +1007,7 @@
 						"numberOfProbes": 2
 					}
 				}]
-			}
-				
+			}				
 		}, {
 			"type": "Microsoft.Network/networkInterfaces",
 			"name": "[concat(variables('openshiftBastionHostname'), 'nic')]",
@@ -1585,7 +1577,7 @@
 					]
 				},
 				"protectedSettings": {
-					"commandToExecute": "[concat('bash ', variables('bastionPrepScriptFileName'), ' ', parameters('cloudAccessUsername'), ' ', variables('singlequote'), parameters('cloudAccessPassword'), variables('singlequote'), ' ', parameters('cloudAccessInfraPoolId'))]"
+					"commandToExecute": "[concat('bash ', variables('bastionPrepScriptFileName'), ' ', parameters('rhnOrganizationID'), ' ', parameters('rhnActivationKeyInfra'))]"
 				}
 			}
 		}, {
@@ -1614,7 +1606,7 @@
 					]
 				},
 				"protectedSettings": {
-					"commandToExecute": "[concat('bash ', variables('masterPrepScriptFileName'), ' ', parameters('cloudAccessUsername'), ' ', variables('singlequote'), parameters('cloudAccessPassword'), variables('singlequote'), ' ', parameters('cloudAccessInfraPoolId'), ' ', parameters('adminUsername'), ' ', variables('newStorageAccountPersistentVolume1'))]"
+					"commandToExecute": "[concat('bash ', variables('masterPrepScriptFileName'), ' ', parameters('rhnOrganizationID'), ' ', parameters('rhnActivationKeyInfra'), ' ', parameters('adminUsername'), ' ', variables('newStorageAccountPersistentVolume1'))]"
 				}
 			}
 		}, {
@@ -1643,7 +1635,7 @@
 					]
 				},
 				"protectedSettings": {
-					"commandToExecute": "[concat('bash ', variables('nodePrepScriptFileName'), ' ', parameters('cloudAccessUsername'), ' ', variables('singlequote'), parameters('cloudAccessPassword'), variables('singlequote'), ' ', parameters('cloudAccessInfraPoolId'))]"
+					"commandToExecute": "[concat('bash ', variables('nodePrepScriptFileName'), ' ', parameters('rhnOrganizationID'), ' ', parameters('rhnActivationKeyInfra'))]"
 				}
 			}
 		}, {
@@ -1672,7 +1664,7 @@
 					]
 				},
 				"protectedSettings": {
-					"commandToExecute": "[concat('bash ', variables('nodePrepScriptFileName'), ' ', parameters('cloudAccessUsername'), ' ', variables('singlequote'), parameters('cloudAccessPassword'), variables('singlequote'), ' ', parameters('cloudAccessInfraPoolId'))]"
+					"commandToExecute": "[concat('bash ', variables('nodePrepScriptFileName'), ' ', parameters('rhnOrganizationID'), ' ', parameters('rhnActivationKeyInfra'))]"
 				}
 			}	
 		}, {
@@ -1701,7 +1693,7 @@
 					]
 				},
 				"protectedSettings": {
-					"commandToExecute": "[concat('bash ', variables('nodePrepScriptFileName'), ' ', parameters('cloudAccessUsername'), ' ', variables('singlequote'), parameters('cloudAccessPassword'), variables('singlequote'), ' ', parameters('cloudAccessNodePoolId'))]"
+					"commandToExecute": "[concat('bash ', variables('nodePrepScriptFileName'), ' ', parameters('rhnOrganizationID'), ' ', parameters('rhnActivationKeyCNodes'))]"
 				}
 			}
 		}, {
@@ -1730,7 +1722,7 @@
 					]
 				},
 				"protectedSettings": {
-					"commandToExecute": "[concat('bash ', variables('nodePrepScriptFileName'), ' ', parameters('cloudAccessUsername'), ' ', variables('singlequote'), parameters('cloudAccessPassword'), variables('singlequote'), ' ', parameters('cloudAccessNodePoolId'))]"
+					"commandToExecute": "[concat('bash ', variables('nodePrepScriptFileName'), ' ', parameters('rhnOrganizationID'), ' ', parameters('rhnActivationKeyCNodes'))]"
 				}
 			}
 		}, {

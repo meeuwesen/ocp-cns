@@ -1,11 +1,10 @@
 #!/bin/bash
 echo $(date) " - Starting Script"
 
-USER=$1
-PASSWORD="$2"
-POOL_ID=$3
+RHN_ORGANIZATIONID=$1
+RHN_ACTIVATIONKEY=$2
 
-echo "$USER - $PASSWORD - $POOL_ID"
+echo "$RHN_ORGANIZATIONID  - $RHN_ACTIVATIONKEY"
 
 # Verify that we have access to Red Hat Network
 ITER=0
@@ -28,31 +27,17 @@ done
 # Register Host with Cloud Access Subscription
 echo $(date) " - Register host with Cloud Access Subscription"
 
-subscription-manager register --username="$USER" --password="$PASSWORD" --force
+subscription-manager register --activationkey="$RHN_ACTIVATIONKEY" --org="$RHN_ORGANIZATIONID" --force
 if [ $? -eq 0 ]; then
    echo "Subscribed successfully"
 else
    sleep 5
-   subscription-manager register --username="$USER" --password="$PASSWORD" --force
+   subscription-manager register --activationkey="$RHN_ACTIVATIONKEY" --org="$RHN_ORGANIZATIONID" --force
    if [ "$?" -eq 0 ]; then
       echo "Subscribed successfully."
    else
-      echo "Incorrect Username and / or Password specified"
+      echo "Registering the subscription failed."
       exit 3
-   fi
-fi
-
-subscription-manager attach --pool=$POOL_ID
-if [ $? -eq 0 ]; then
-   echo "Pool attached successfully"
-else
-   sleep 5
-   subscription-manager attach --pool=$POOL_ID
-   if [ "$?" -eq 0 ]; then
-      echo "Pool attached successfully"
-   else
-      echo "Incorrect Pool ID or no entitlements available"
-      exit 4
    fi
 fi
 
