@@ -167,7 +167,7 @@ os_sdn_network_plugin_name='redhat/openshift-ovs-multitenant'
 openshift_disable_check=disk_availability,memory_availability
 
 openshift_master_cluster_method=native
-openshift_master_cluster_hostname=$BASTION
+openshift_master_cluster_hostname=$MASTERPUBLICIPHOSTNAME
 openshift_master_cluster_public_hostname=$MASTERPUBLICIPHOSTNAME
 #openshift_master_cluster_public_vip=$MASTERPUBLICIPADDRESS
 
@@ -236,10 +236,10 @@ for node in ocpm-{0..3}; do
 	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'master\', \'zone\': \'default\'}\"
 done|grep ocpm >>/etc/ansible/hosts
 for node in ocpip-{0..10}; do
-	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\'}\"
+	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\', \'router\': \'public\'}\"
 done|grep ocpip >>/etc/ansible/hosts
 for node in ocpir-{0..10}; do
-	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\'}\"
+	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\', \'router\': \'restricted\'}\"
 done|grep ocpir >>/etc/ansible/hosts
 for node in ocpnt-{0..30}; do
 	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\', \'environment\': \'test\'}\"
