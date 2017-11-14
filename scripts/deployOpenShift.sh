@@ -235,12 +235,15 @@ EOF
 for node in ocpm-{0..3}; do
 	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'master\', \'zone\': \'default\'}\"
 done|grep ocpm >>/etc/ansible/hosts
-for node in ocpip-{0..10}; do
+for node in ocpip-{0..5}; do
 	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\', \'router\': \'public\'}\"
 done|grep ocpip >>/etc/ansible/hosts
-for node in ocpir-{0..10}; do
+for node in ocpir-{0..5}; do
 	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\', \'router\': \'restricted\'}\"
 done|grep ocpir >>/etc/ansible/hosts
+for node in ocpii-{0..5}; do
+	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\', \'router\': \'internal\'}\"
+done|grep ocpii >>/etc/ansible/hosts
 for node in ocpnt-{0..30}; do
 	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\', \'environment\': \'test\'}\"
 done|grep ocpnt >>/etc/ansible/hosts
@@ -261,6 +264,10 @@ for node in ocpip-{0..5}; do
 done
 
 for node in ocpir-{0..5}; do
+	ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $3 " " $2  }'|sed -e 's/(//' -e 's/)//' -e "s/.net/.net $node/"
+done
+
+for node in ocpii-{0..5}; do
 	ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $3 " " $2  }'|sed -e 's/(//' -e 's/)//' -e "s/.net/.net $node/"
 done
 

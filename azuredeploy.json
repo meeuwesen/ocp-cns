@@ -227,20 +227,24 @@
 	},
 	"variables": {
 		"location": "[resourceGroup().location]",
+		
 		"apiVersionCompute": "2015-06-15",
 		"apiVersionNetwork": "2016-03-30",
 		"apiVersionStorage": "2015-06-15",
 		"apiVersionStorage2": "2017-06-01",
 		"apiVersionLinkTemplate": "2015-01-01",
+
 		"namingInfix": "[toLower(parameters('openshiftClusterPrefix'))]",
 		"openshiftBastionHostname": "[concat(variables('namingInfix'), 'b')]",
 		"openshiftMasterHostname": "[concat(variables('namingInfix'), 'm')]",
 		"openshiftInfraHostname": "[concat(variables('namingInfix'), 'i')]",
 		"openshiftNodeHostname": "[concat(variables('namingInfix'), 'n')]",
 		"openshiftInfraPublicHostname": "[concat(variables('openshiftInfraHostname'), 'p')]",
-		"openshiftInfraRestrictedHostname": "[concat(variables('openshiftInfraHostname'), 'r')]",		
+		"openshiftInfraRestrictedHostname": "[concat(variables('openshiftInfraHostname'), 'r')]",
+		"openshiftInfraInternalHostname": "[concat(variables('openshiftInfraHostname'), 'i')]",		
 		"openshiftTestNodeHostname": "[concat(variables('openshiftNodeHostname'), 't')]",
 		"openshiftProdNodeHostname": "[concat(variables('openshiftNodeHostname'), 'p')]",
+		
 		"newStorageAccountMaster": "[concat(uniqueString(concat(resourceGroup().id, 'msa', '0')), 'msa')]",
 		"newStorageAccountNode": "[concat(uniqueString(concat(resourceGroup().id, 'nsa', '1')), 'nsa')]",
 		"newStorageAccountPersistentVolume1": "[concat(uniqueString(concat(resourceGroup().id, 'pv1sa', '2')), 'pv1sa')]",
@@ -287,7 +291,9 @@
 			"version": "latest"
 		},
 		"imageReference": "[variables('osType')]",
+
 		"sshKeyPath": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
+		
 		"bastionPrepScriptUrl": "[concat(parameters('_artifactsLocation'), 'scripts/bastionPrep.sh')]",
 		"nodePrepScriptUrl": "[concat(parameters('_artifactsLocation'), 'scripts/nodePrep.sh')]",
 		"masterPrepScriptUrl": "[concat(parameters('_artifactsLocation'), 'scripts/masterPrep.sh')]",
@@ -295,6 +301,7 @@
 		"nodePrepScriptFileName": "nodePrep.sh",
 		"masterPrepScriptFileName": "masterPrep.sh",
 		"openshiftDeploymentTemplateUrl": "[concat(parameters('_artifactsLocation'), 'nested/openshiftdeploy.json')]",
+		
 		"vmSizesMap": {
 			"Standard_A4": {
 				"storageAccountType": "Standard_LRS"
@@ -1146,6 +1153,36 @@
 			}
 		}, {
 			"type": "Microsoft.Network/networkInterfaces",
+			"name": "[concat(variables('openshiftInfraInternalHostname'), copyIndex(), 'nic')]",
+			"location": "[variables('location')]",
+			"apiVersion": "[variables('apiVersionNetwork')]",
+			"tags": {
+				"displayName": "OpenShiftInfraInternalNetworkInterfaces"
+			},
+			"dependsOn": [
+				"[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
+				"[concat('Microsoft.Network/networkSecurityGroups/', variables('openshiftInfraHostname'), '-nsg')]"
+			],
+			"copy": {
+				"name": "infraInternalNicLoop",
+				"count": 1
+			},
+			"properties": {
+				"ipConfigurations": [{
+					"name": "[concat(variables('openshiftInfraInternalHostname'), copyIndex(), 'ipconfig')]",
+					"properties": {
+						"privateIPAllocationMethod": "Dynamic",
+						"subnet": {
+							"id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'), '/subnets/', variables('infraSubnetName'))]"
+						}
+					}
+				}],
+				"networkSecurityGroup": {
+					"id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('openshiftInfraHostname'), '-nsg'))]"
+				}
+			}
+		}, {
+			"type": "Microsoft.Network/networkInterfaces",
 			"name": "[concat(variables('openshiftTestNodeHostname'), copyIndex(), 'nic')]",
 			"location": "[variables('location')]",
 			"apiVersion": "[variables('apiVersionNetwork')]",
@@ -1435,7 +1472,69 @@
 						"id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('openshiftInfraRestrictedHostname'), copyIndex(), 'nic'))]"
 					}]
 				}
-			}				
+			}
+		}, {
+			"type": "Microsoft.Compute/virtualMachines",
+			"name": "[concat(variables('openshiftInfraInternalHostname'), '-', copyIndex())]",
+			"location": "[variables('location')]",
+			"apiVersion": "[variables('apiVersionCompute')]",
+			"tags": {
+				"displayName": "OpenShiftInfraInternalNodes"
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Storage/storageAccounts', variables('newStorageAccountMaster'))]",
+				"[concat('Microsoft.Network/networkInterfaces/', variables('openshiftInfraInternalHostname'), copyIndex(), 'nic')]"
+			],
+			"copy": {
+				"name": "infraInternalLoop",
+				"count": 1
+			},
+			"properties": {
+				"availabilitySet": {
+					"id": "[resourceId('Microsoft.Compute/availabilitySets', 'infrarestrictedavailabilityset')]"
+				},
+				"hardwareProfile": {
+					"vmSize": "[parameters('infraVmSize')]"
+				},
+				"osProfile": {
+					"computerName": "[concat(variables('openshiftInfraInternalHostname'), '-', copyIndex())]",
+					"adminUsername": "[parameters('adminUsername')]",
+					"linuxConfiguration": {
+						"disablePasswordAuthentication": true,
+						"ssh": {
+							"publicKeys": [{
+								"path": "[variables('sshKeyPath')]",
+								"keyData": "[parameters('sshPublicKey')]"
+							}]
+						}
+					}
+				},
+				"storageProfile": {
+					"imageReference": "[variables('imageReference')]",
+					"osDisk": {
+						"name": "[concat(variables('openshiftInfraInternalHostname'), copyIndex(), 'osdisk')]",
+						"vhd": {
+							"uri": "[concat(concat(reference(resourceId(resourceGroup().name, 'Microsoft.Storage/storageAccounts', variables('newStorageAccountMaster')), variables('apiVersionStorage')).primaryEndpoints['blob'], 'vhds/'), variables('openshiftInfraInternalHostname'), copyIndex(), '.vhd')]"
+						},
+						"caching": "ReadWrite",
+						"createOption": "FromImage"
+					},
+					"dataDisks": [{
+						"name": "[concat(variables('openshiftInfraInternalHostname'), copyIndex(), '-docker-pool')]",
+						"diskSizeGB": "[parameters('dataDiskSize')]",
+						"lun": 0,
+						"vhd": {
+							"uri": "[concat(concat(reference(resourceId(resourceGroup().name, 'Microsoft.Storage/storageAccounts', variables('newStorageAccountMaster')), variables('apiVersionStorage')).primaryEndpoints['blob'], 'vhds/'), variables('openshiftInfraInternalHostname'), copyIndex(), 'docker-pool.vhd')]"
+						},
+							"createOption": "Empty"
+					}]
+				},
+				"networkProfile": {
+					"networkInterfaces": [{
+						"id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('openshiftInfraInternalHostname'), copyIndex(), 'nic'))]"
+					}]
+				}
+			}						
 		}, {
 			"type": "Microsoft.Compute/virtualMachines",
 			"name": "[concat(variables('openshiftTestNodeHostname'), '-', copyIndex())]",
@@ -1671,7 +1770,36 @@
 				"protectedSettings": {
 					"commandToExecute": "[concat('bash ', variables('nodePrepScriptFileName'), ' ', parameters('rhnOrganizationID'), ' ', parameters('rhnActivationKeyInfra'))]"
 				}
-			}	
+			}
+		}, {
+			"type": "Microsoft.Compute/virtualMachines/extensions",
+			"name": "[concat(variables('openshiftInfraInternalHostname'), '-', copyIndex(), '/prepNodes')]",
+			"location": "[variables('location')]",
+			"apiVersion": "[variables('apiVersionCompute')]",
+			"tags": {
+				"displayName": "PrepInternalInfra"
+			},
+			"dependsOn": [
+				"[concat('Microsoft.Compute/virtualMachines/', variables('openshiftInfraInternalHostname'), '-', copyIndex())]"
+			],
+			"copy": {
+				"name": "infraInternalPrepLoop",
+				"count": 1
+			},
+			"properties": {
+				"publisher": "Microsoft.Azure.Extensions",
+				"type": "CustomScript",
+				"typeHandlerVersion": "2.0",
+				"autoUpgradeMinorVersion": true,
+				"settings": {
+					"fileUris": [
+						"[variables('nodePrepScriptUrl')]"
+					]
+				},
+				"protectedSettings": {
+					"commandToExecute": "[concat('bash ', variables('nodePrepScriptFileName'), ' ', parameters('rhnOrganizationID'), ' ', parameters('rhnActivationKeyInfra'))]"
+				}
+			}		
 		}, {
 			"type": "Microsoft.Compute/virtualMachines/extensions",
 			"name": "[concat(variables('openshiftTestNodeHostname'), '-', copyIndex(), '/prepNodes')]",
@@ -1738,6 +1866,7 @@
 				"masterPrepLoop",
 				"infraPublicPrepLoop",
 				"infraRestrictedPrepLoop",
+				"infraInternalPrepLoop",
 				"testnodePrepLoop",
 				"prodnodePrepLoop"
 			],
