@@ -149,7 +149,6 @@ nodes
 etcd
 master0
 nfs
-lb
 
 # Set variables common for all OSEv3 hosts
 [OSEv3:vars]
@@ -222,9 +221,6 @@ done|grep ocpm >>/etc/ansible/hosts
 cat >> /etc/ansible/hosts <<EOF
 [nfs]
 $MASTER-0.$DOMAIN
-
-[lb]
-$BASTION
 
 [master0]
 $MASTER-0
@@ -352,9 +348,7 @@ runuser -l $SUDOUSER -c "ansible-playbook ~/postinstall4.yml"
 echo $(date) "- Creating Storage Classes"
 
 runuser -l $SUDOUSER -c "ansible-playbook ~/configurestorageclass.yml"
-
 echo $(date) "- Sleep for 120"
-
 sleep 120
 
 # OPENSHIFT_DEFAULT_REGISTRY UNSET MAGIC
