@@ -254,6 +254,8 @@
 		"infraSubnetPrefix": "10.203.70.0/24",
 		"testnodeSubnetPrefix": "10.203.40.0/24",
 		"prodnodeSubnetPrefix": "10.203.60.0/24",
+		"bastionStaticPrivateIpAddress": "10.203.20.5",
+		"infraInternalStaticPrivateIpAddress": "10.203.70.5",
 		"virtualNetworkName": "openshiftvnet",
 		"masterSubnetName": "mastersubnet",
 		"infraSubnetName": "infrasubnet",
@@ -1070,7 +1072,8 @@
 				"ipConfigurations": [{
 					"name": "[concat(variables('openshiftMasterHostname'), copyIndex(), 'ipconfig')]",
 					"properties": {
-						"privateIPAllocationMethod": "Dynamic",
+						"privateIPAllocationMethod": "Static",
+						"privateIPAddress": "[variables('bastionStaticPrivateIpAddress')]",
 						"subnet": {
 							"id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'), '/subnets/', variables('masterSubnetName'))]"
 						},
@@ -1171,7 +1174,8 @@
 				"ipConfigurations": [{
 					"name": "[concat(variables('openshiftInfraInternalHostname'), copyIndex(), 'ipconfig')]",
 					"properties": {
-						"privateIPAllocationMethod": "Dynamic",
+						"privateIPAllocationMethod": "Static",
+						"privateIPAddress": "[variables('infraInternalStaticPrivateIpAddress')]",
 						"subnet": {
 							"id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'), '/subnets/', variables('infraSubnetName'))]"
 						}
