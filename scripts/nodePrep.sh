@@ -71,7 +71,7 @@ yum -y install docker-1.12.6
 sed -i -e "s#^OPTIONS='--selinux-enabled'#OPTIONS='--selinux-enabled --insecure-registry 172.30.0.0/16'#" /etc/sysconfig/docker
 
 # Create thin pool logical volume for Docker
-echo $(date) " - Creating thin pool logical volume for Docker and staring service"
+echo $(date) " - Creating thin pool logical volume for Docker and starting service"
 
 #DOCKERVG=$(parted -m /dev/sda print all 2>/dev/null | grep unknown | grep /dev/sd | cut -d':' -f1)
 DOCKERVG=/dev/sdc
