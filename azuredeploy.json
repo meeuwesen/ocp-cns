@@ -1064,7 +1064,7 @@
 				"[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
 				"[concat('Microsoft.Network/loadBalancers/', variables('masterLoadBalancerName'))]",
 				"[concat('Microsoft.Network/networkSecurityGroups/', variables('openshiftMasterHostname'), '-nsg')]",
-				"[concat('Microsoft.Network/networkInterfaces/', variables('openshiftBastionHostname'), copyIndex(), 'nic')]"
+				"[concat('Microsoft.Network/networkInterfaces/', variables('openshiftBastionHostname'), 'nic')]"
 			],
 			"copy": {
 				"name": "masterNicLoop",
@@ -1099,7 +1099,7 @@
 				"[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
 				"[concat('Microsoft.Network/loadBalancers/', variables('infraPublicLoadBalancerName'))]",
 				"[concat('Microsoft.Network/networkSecurityGroups/', variables('openshiftInfraHostname'), '-nsg')]",
-				"[concat('Microsoft.Network/networkInterfaces/', variables('openshiftInfraInternalHostname'), copyIndex(), 'nic')]"
+				"[concat('Microsoft.Network/networkInterfaces/', variables('openshiftInfraInternalHostname'), '0', 'nic')]"
 			],
 			"copy": {
 				"name": "infraPublicNicLoop",
@@ -1134,7 +1134,7 @@
 				"[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
 				"[concat('Microsoft.Network/loadBalancers/', variables('infraRestrictedLoadBalancerName'))]",
 				"[concat('Microsoft.Network/networkSecurityGroups/', variables('openshiftInfraHostname'), '-nsg')]",
-				"[concat('Microsoft.Network/networkInterfaces/', variables('openshiftInfraInternalHostname'), copyIndex(), 'nic')]"
+				"[concat('Microsoft.Network/networkInterfaces/', variables('openshiftInfraInternalHostname'), '0', 'nic')]"
 			],
 			"copy": {
 				"name": "infraRestrictedNicLoop",
