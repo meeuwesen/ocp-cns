@@ -163,6 +163,8 @@ openshift_master_default_subdomain=$ROUTING
 openshift_override_hostname_check=true
 osm_use_cockpit=true
 os_sdn_network_plugin_name='redhat/openshift-ovs-multitenant'
+openshift_cloudprovider_kind=azure
+osm_default_node_selector='environment=test'
 openshift_disable_check=disk_availability,memory_availability
 
 openshift_master_cluster_method=native
