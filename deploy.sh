@@ -18,6 +18,10 @@ if [ -f ./deploy.cfg ]; then
 		OK=1
 	elif test -z $OCP_PASSWORD; then
 		OK=1
+	elif test -z $AAD_CLIENTID; then
+		OK=1
+	elif test -z $AAD_SECRET; then
+		OK=1		
 	elif test -z $RHN_ORGANIZATIONID; then
 		OK=1
 	elif test -z $RHN_ACTIVATIONKEY_INFRA; then
@@ -129,6 +133,12 @@ cat > azuredeploy.parameters.json << EOF
 		},
 		"openshiftPassword": {
 			"value": "$OCP_PASSWORD"
+		},
+		"aadClientId": {
+			"value": "$AAD_CLIENTID"
+		},
+		"aadClientSecret": {
+			"value": "$AAD_SECRET"
 		},
 		"rhnOrganizationID": {
 			"value": "$RHN_ORGANIZATIONID"

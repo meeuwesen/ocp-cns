@@ -11,6 +11,13 @@ MASTER=$4
 MASTERPUBLICIPHOSTNAME=$5
 MASTERPUBLICIPADDRESS=$6
 ROUTING=${7}
+TENANTID=${8}
+SUBSCRIPTIONID=${9}
+AADCLIENTID=${10}
+AADCLIENTSECRET="${11}"
+RESOURCEGROUP=${12}
+LOCATION=${13}
+
 BASTION=$(hostname -f)
 
 DOMAIN=$( awk 'NR==2' /etc/resolv.conf | awk '{ print $2 }' )
@@ -55,7 +62,6 @@ EOF
 echo $(date) " - Create Ansible Playbooks for Post Installation tasks"
 
 # Run on all masters - Create Inital OpenShift User on all Masters
-
 cat > /home/${SUDOUSER}/addocpuser.yml <<EOF
 ---
 - hosts: masters
@@ -73,7 +79,6 @@ cat > /home/${SUDOUSER}/addocpuser.yml <<EOF
 EOF
 
 # Run on only MASTER-0 - Make initial OpenShift User a Cluster Admin
-
 cat > /home/${SUDOUSER}/assignclusteradminrights.yml <<EOF
 ---
 - hosts: nfs
@@ -89,7 +94,6 @@ cat > /home/${SUDOUSER}/assignclusteradminrights.yml <<EOF
 EOF
 
 # Run on all nodes - Set Root password on all nodes
-
 cat > /home/${SUDOUSER}/assignrootpassword.yml <<EOF
 ---
 - hosts: nodes
@@ -138,6 +142,219 @@ cat > /home/${SUDOUSER}/configurestorageclass.yml <<EOF
     shell: oc create -f /home/${SUDOUSER}/scgeneric1.yml
 EOF
 
+# Create vars.yml file for use by setup-azure-config.yml playbook
+cat > /home/${SUDOUSER}/vars.yml <<EOF
+g_tenantId: $TENANTID
+g_subscriptionId: $SUBSCRIPTIONID
+g_aadClientId: $AADCLIENTID
+g_aadClientSecret: $AADCLIENTSECRET
+g_resourceGroup: $RESOURCEGROUP
+g_location: $LOCATION
+EOF
+
+# Create Azure Cloud Provider configuration Playbook for Master Config
+cat > /home/${SUDOUSER}/setup-azure-master.yml <<EOF
+#!/usr/bin/ansible-playbook 
+- hosts: masters
+  gather_facts: no
+  serial: 1
+  vars_files:
+  - vars.yml
+  become: yes
+  vars:
+    azure_conf_dir: /etc/azure
+    azure_conf: "{{ azure_conf_dir }}/azure.conf"
+    master_conf: /etc/origin/master/master-config.yaml
+  handlers:
+  - name: restart atomic-openshift-master-api
+    systemd:
+      state: restarted
+      name: atomic-openshift-master-api
+
+  - name: restart atomic-openshift-master-controllers
+    systemd:
+      state: restarted
+      name: atomic-openshift-master-controllers
+
+  post_tasks:
+  - name: make sure /etc/azure exists
+    file:
+      state: directory
+      path: "{{ azure_conf_dir }}"
+
+  - name: populate /etc/azure/azure.conf
+    copy:
+      dest: "{{ azure_conf }}"
+      content: |
+        {
+          "aadClientID" : "{{ g_aadClientId }}",
+          "aadClientSecret" : "{{ g_aadClientSecret }}",
+          "subscriptionID" : "{{ g_subscriptionId }}",
+          "tenantID" : "{{ g_tenantId }}",
+          "resourceGroup": "{{ g_resourceGroup }}",
+        } 
+    notify:
+    - restart atomic-openshift-master-api
+    - restart atomic-openshift-master-controllers
+
+  - name: insert the azure disk config into the master
+    modify_yaml:
+      dest: "{{ master_conf }}"
+      yaml_key: "{{ item.key }}"
+      yaml_value: "{{ item.value }}"
+    with_items:
+    - key: kubernetesMasterConfig.apiServerArguments.cloud-config
+      value:
+      - "{{ azure_conf }}"
+
+    - key: kubernetesMasterConfig.apiServerArguments.cloud-provider
+      value:
+      - azure
+
+    - key: kubernetesMasterConfig.controllerArguments.cloud-config
+      value:
+      - "{{ azure_conf }}"
+
+    - key: kubernetesMasterConfig.controllerArguments.cloud-provider
+      value:
+      - azure
+    notify:
+    - restart atomic-openshift-master-api
+    - restart atomic-openshift-master-controllers
+EOF
+
+# Create Azure Cloud Provider configuration Playbook for Node Config (Master Nodes)
+cat > /home/${SUDOUSER}/setup-azure-node-master.yml <<EOF
+#!/usr/bin/ansible-playbook 
+- hosts: masters
+  serial: 1
+  gather_facts: no
+  vars_files:
+  - vars.yml
+  become: yes
+  vars:
+    azure_conf_dir: /etc/azure
+    azure_conf: "{{ azure_conf_dir }}/azure.conf"
+    node_conf: /etc/origin/node/node-config.yaml
+  handlers:
+  - name: restart atomic-openshift-node
+    systemd:
+      state: restarted
+      name: atomic-openshift-node
+  post_tasks:
+  - name: make sure /etc/azure exists
+    file:
+      state: directory
+      path: "{{ azure_conf_dir }}"
+
+  - name: populate /etc/azure/azure.conf
+    copy:
+      dest: "{{ azure_conf }}"
+      content: |
+        {
+          "aadClientID" : "{{ g_aadClientId }}",
+          "aadClientSecret" : "{{ g_aadClientSecret }}",
+          "subscriptionID" : "{{ g_subscriptionId }}",
+          "tenantID" : "{{ g_tenantId }}",
+          "resourceGroup": "{{ g_resourceGroup }}",
+        } 
+    notify:
+    - restart atomic-openshift-node
+  - name: insert the azure disk config into the node
+    modify_yaml:
+      dest: "{{ node_conf }}"
+      yaml_key: "{{ item.key }}"
+      yaml_value: "{{ item.value }}"
+    with_items:
+    - key: kubeletArguments.cloud-config
+      value:
+      - "{{ azure_conf }}"
+
+    - key: kubeletArguments.cloud-provider
+      value:
+      - azure
+    notify:
+    - restart atomic-openshift-node
+EOF
+
+# Create Azure Cloud Provider configuration Playbook for Node Config (Non-Master Nodes)
+cat > /home/${SUDOUSER}/setup-azure-node.yml <<EOF
+#!/usr/bin/ansible-playbook 
+- hosts: nodes:!masters
+  serial: 1
+  gather_facts: no
+  vars_files:
+  - vars.yml
+  become: yes
+  vars:
+    azure_conf_dir: /etc/azure
+    azure_conf: "{{ azure_conf_dir }}/azure.conf"
+    node_conf: /etc/origin/node/node-config.yaml
+  handlers:
+  - name: restart atomic-openshift-node
+    systemd:
+      state: restarted
+      name: atomic-openshift-node
+  post_tasks:
+  - name: make sure /etc/azure exists
+    file:
+      state: directory
+      path: "{{ azure_conf_dir }}"
+
+  - name: populate /etc/azure/azure.conf
+    copy:
+      dest: "{{ azure_conf }}"
+      content: |
+        {
+          "aadClientID" : "{{ g_aadClientId }}",
+          "aadClientSecret" : "{{ g_aadClientSecret }}",
+          "subscriptionID" : "{{ g_subscriptionId }}",
+          "tenantID" : "{{ g_tenantId }}",
+          "resourceGroup": "{{ g_resourceGroup }}",
+        } 
+    notify:
+    - restart atomic-openshift-node
+  - name: insert the azure disk config into the node
+    modify_yaml:
+      dest: "{{ node_conf }}"
+      yaml_key: "{{ item.key }}"
+      yaml_value: "{{ item.value }}"
+    with_items:
+    - key: kubeletArguments.cloud-config
+      value:
+      - "{{ azure_conf }}"
+
+    - key: kubeletArguments.cloud-provider
+      value:
+      - azure
+    notify:
+    - restart atomic-openshift-node
+  - name: delete the node so it can recreate itself
+    command: oc delete node {{inventory_hostname}}
+    delegate_to: ${BASTION}
+  - name: sleep to let node come back to life
+    pause:
+       seconds: 90
+EOF
+
+# Create Playbook to delete stuck Master nodes and set as not schedulable
+cat > /home/${SUDOUSER}/deletestucknodes.yml <<EOF
+- hosts: masters
+  gather_facts: no
+  become: yes
+  vars:
+    description: "Delete stuck nodes"
+  tasks:
+  - name: Delete stuck nodes so it can recreate itself
+    command: oc delete node {{inventory_hostname}}
+    delegate_to: ${BASTION}
+  - name: sleep between deletes
+    pause:
+      seconds: 25
+  - name: set masters as unschedulable
+    command: oadm manage-node {{inventory_hostname}} --schedulable=false
+EOF
+
 # Create Ansible Hosts File
 echo $(date) " - Create Ansible Hosts file"
 
@@ -166,6 +383,10 @@ os_sdn_network_plugin_name='redhat/openshift-ovs-multitenant'
 openshift_cloudprovider_kind=azure
 osm_default_node_selector='environment=test'
 openshift_disable_check=disk_availability,memory_availability
+
+# default selectors for router and registry services
+openshift_router_selector='region=infra'
+openshift_registry_selector='region=infra'
 
 openshift_master_cluster_method=native
 openshift_master_cluster_hostname=$MASTERPUBLICIPHOSTNAME
@@ -321,17 +542,18 @@ echo $(date) "- Assigning cluster admin rights to user"
 
 runuser -l $SUDOUSER -c "ansible-playbook ~/assignclusteradminrights.yml"
 
+
 # Setting password for Cockpit
 echo $(date) "- Assigning password for root, which is used to login to Cockpit"
 
 runuser -l $SUDOUSER -c "ansible-playbook ~/assignrootpassword.yml"
+
 
 # Unset of OPENSHIFT_DEFAULT_REGISTRY. Just the easiest way out.
 cat > /tmp/atomic-openshift-master <<EOF
 OPTIONS=--loglevel=2
 CONFIG_FILE=/etc/origin/master/master-config.yaml
 #OPENSHIFT_DEFAULT_REGISTRY=docker-registry.default.svc:5000
-
 
 # Proxy configuration
 # See https://docs.openshift.com/enterprise/latest/install_config/install/advanced_install.html#configuring-global-proxy
@@ -344,14 +566,8 @@ EOF
 
 chmod a+r /tmp/atomic-openshift-master
 
+# Unset default registry DNS name
 runuser -l $SUDOUSER -c "ansible-playbook ~/postinstall4.yml"
-
-# Create Storage Classes
-echo $(date) "- Creating Storage Classes"
-
-runuser -l $SUDOUSER -c "ansible-playbook ~/configurestorageclass.yml"
-echo $(date) "- Sleep for 120"
-sleep 120
 
 # OPENSHIFT_DEFAULT_REGISTRY UNSET MAGIC
 for item in ocpm-0 ocpm-1 ocpm-2; do
@@ -360,5 +576,60 @@ for item in ocpm-0 ocpm-1 ocpm-2; do
 	runuser -l $SUDOUSER -c "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $item 'sudo systemctl restart atomic-openshift-master-api'"
 	runuser -l $SUDOUSER -c "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $item 'sudo systemctl restart atomic-openshift-master-controllers'"
 done
+
+
+# Create Storage Classes
+echo $(date) "- Creating Storage Classes"
+
+runuser -l $SUDOUSER -c "ansible-playbook ~/configurestorageclass.yml"
+
+echo $(date) "- Sleep for 120"
+
+sleep 120
+
+# Execute setup-azure-master and setup-azure-node playbooks to configure Azure Cloud Provider
+echo $(date) "- Configuring OpenShift Cloud Provider to be Azure"
+
+runuser -l $SUDOUSER -c "ansible-playbook ~/setup-azure-master.yml"
+
+if [ $? -eq 0 ]
+then
+    echo $(date) " - Cloud Provider setup of master config on Master Nodes completed successfully"
+else
+    echo $(date) "- Cloud Provider setup of master config on Master Nodes failed to completed"
+    exit 7
+fi
+
+runuser -l $SUDOUSER -c "ansible-playbook ~/setup-azure-node-master.yml"
+
+if [ $? -eq 0 ]
+then
+    echo $(date) " - Cloud Provider setup of node config on Master Nodes completed successfully"
+else
+    echo $(date) "- Cloud Provider setup of node config on Master Nodes failed to completed"
+    exit 8
+fi
+
+runuser -l $SUDOUSER -c "ansible-playbook ~/setup-azure-node.yml"
+
+if [ $? -eq 0 ]
+then
+    echo $(date) " - Cloud Provider setup of node config on App Nodes completed successfully"
+else
+    echo $(date) "- Cloud Provider setup of node config on App Nodes failed to completed"
+    exit 9
+fi
+
+runuser -l $SUDOUSER -c "ansible-playbook ~/deletestucknodes.yml"
+
+if [ $? -eq 0 ]
+then
+    echo $(date) " - Cloud Provider setup of OpenShift Cluster completed successfully"
+else
+    echo $(date) "- Cloud Provider setup failed to delete stuck Master nodes or was not able to set them as unschedulable"
+    exit 10
+fi
+
+oc label nodes --all logging-infra-fluentd=true logging=true
 
 echo $(date) " - Script complete"
