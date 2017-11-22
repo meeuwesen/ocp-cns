@@ -331,7 +331,7 @@ cat > /home/${SUDOUSER}/setup-azure-node.yml <<EOF
     - restart atomic-openshift-node
   - name: delete the node so it can recreate itself
     command: oc delete node {{inventory_hostname}}
-    delegate_to: ${BASTION}
+    delegate_to: ${MASTER}-0
   - name: sleep to let node come back to life
     pause:
        seconds: 90
@@ -347,7 +347,7 @@ cat > /home/${SUDOUSER}/deletestucknodes.yml <<EOF
   tasks:
   - name: Delete stuck nodes so it can recreate itself
     command: oc delete node {{inventory_hostname}}
-    delegate_to: ${BASTION}
+    delegate_to: ${MASTER}-0
   - name: sleep between deletes
     pause:
       seconds: 25
@@ -577,6 +577,11 @@ for item in ocpm-0 ocpm-1 ocpm-2; do
 	runuser -l $SUDOUSER -c "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $item 'sudo systemctl restart atomic-openshift-master-controllers'"
 done
 
+# Making sure the ansible modify_yaml module is found
+cat > /home/${SUDOUSER}/.ansible.cfg <<EOF
+[defaults]
+library=/usr/share/ansible/openshift-ansible/library
+EOF
 
 # Create Storage Classes
 echo $(date) "- Creating Storage Classes"
