@@ -308,6 +308,8 @@
 		},
 		"imageReference": "[variables('osType')]",
 
+		"persistentVolume1Type": "Standard_LRS",
+
 		"sshKeyPath": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
 		
 		"bastionPrepScriptUrl": "[concat(parameters('_artifactsLocation'), 'scripts/bastionPrep.sh')]",
@@ -750,8 +752,7 @@
 				"displayName": "PersistentVolume1Storage"
 			},
 			"sku": {
-				"name": "Standard_LRS",
-				"tier": "Standard"
+				"name": "[variables('persistentVolume1Type')]"
 			}				
 		}, {
 			"type": "Microsoft.Network/publicIPAddresses",

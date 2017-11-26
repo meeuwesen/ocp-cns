@@ -20,7 +20,12 @@ LOCATION=${13}
 
 BASTION=$(hostname -f)
 
-DOMAIN=$( awk 'NR==2' /etc/resolv.conf | awk '{ print $2 }' )
+#DOMAIN=$( awk 'NR==2' /etc/resolv.conf | awk '{ print $2 }' )
+DOMAIN=`domainname -d`
+
+echo "$SUDOUSER - $PASSWORD - $MASTER - $MASTERPUBLICIPHOSTNAME - $MASTERPUBLICIPADDRESS - $ROUTING "
+echo "$TENANTID - $SUBSCRIPTIONID - $AADCLIENTID - $AADCLIENTSECRET - $RESOURCEGROUP - $LOCATION"
+echo "$BASTION - $DOMAIN"
 
 # Generate private keys for use by Ansible
 echo $(date) " - Generating Private keys for use by Ansible for OpenShift Installation"
@@ -429,6 +434,7 @@ openshift_master_logging_public_url=https://kibana.$ROUTING
 # host group for masters
 [masters]
 EOF
+
 for node in ocpm-{0..3}; do
 	ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }' 
 done|grep ocpm >>/etc/ansible/hosts
@@ -437,6 +443,7 @@ cat >> /etc/ansible/hosts <<EOF
 # host group for etcd
 [etcd]
 EOF
+
 for node in ocpm-{0..3}; do
 	ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }' 
 done|grep ocpm >>/etc/ansible/hosts
@@ -451,6 +458,7 @@ $MASTER-0
 # host group for nodes
 [nodes]
 EOF
+
 for node in ocpm-{0..3}; do
 	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'master\', \'zone\': \'default\'}\"
 done|grep ocpm >>/etc/ansible/hosts
@@ -502,7 +510,22 @@ done
 chmod a+r /tmp/hosts
 
 # Create correct hosts file on all servers
-runuser -l $SUDOUSER -c "ansible-playbook ~/preinstall.yml"
+#runuser -l $SUDOUSER -c "ansible-playbook ~/preinstall.yml"
+
+echo $(date) " - Running network_manager.yml playbook" 
+#DOMAIN=`domainname -d` 
+
+# Setup NetworkManager to manage eth0 
+runuser -l $SUDOUSER -c "ansible-playbook /usr/share/ansible/openshift-ansible/playbooks/byo/openshift-node/network_manager.yml" 
+
+# Configure resolv.conf on all hosts through NetworkManager 
+echo $(date) " - Setting up NetworkManager on eth0" 
+
+runuser -l $SUDOUSER -c "ansible all -b -m service -a \"name=NetworkManager state=restarted\"" 
+sleep 5 
+runuser -l $SUDOUSER -c "ansible all -b -m command -a \"nmcli con modify eth0 ipv4.dns-search $DOMAIN\"" 
+runuser -l $SUDOUSER -c "ansible all -b -m service -a \"name=NetworkManager state=restarted\"" 
+
 
 # Initiating installation of OpenShift Container Platform using Ansible Playbook
 echo $(date) " - Installing OpenShift Container Platform via Ansible Playbook"
@@ -582,6 +605,8 @@ cat > /home/${SUDOUSER}/.ansible.cfg <<EOF
 [defaults]
 library=/usr/share/ansible/openshift-ansible/library
 EOF
+
+exit 0
 
 # Create Storage Classes
 echo $(date) "- Creating Storage Classes"
