@@ -21,11 +21,12 @@ LOCATION=${13}
 BASTION=$(hostname -f)
 
 #DOMAIN=$( awk 'NR==2' /etc/resolv.conf | awk '{ print $2 }' )
-DOMAIN=`domainname -d`
+#DOMAIN=`domainname -d`
 
 echo "$SUDOUSER - $PASSWORD - $MASTER - $MASTERPUBLICIPHOSTNAME - $MASTERPUBLICIPADDRESS - $ROUTING "
 echo "$TENANTID - $SUBSCRIPTIONID - $AADCLIENTID - $AADCLIENTSECRET - $RESOURCEGROUP - $LOCATION"
-echo "$BASTION - $DOMAIN"
+echo "$BASTION"
+#echo "$BASTION - $DOMAIN"
 
 # Generate private keys for use by Ansible
 echo $(date) " - Generating Private keys for use by Ansible for OpenShift Installation"
@@ -404,7 +405,7 @@ openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 
 # Configure persistent storage via nfs server on master
 openshift_hosted_registry_storage_kind=nfs
 openshift_hosted_registry_storage_access_modes=['ReadWriteMany']
-openshift_hosted_registry_storage_host=$MASTER-0.$DOMAIN
+openshift_hosted_registry_storage_host=${MASTER}-0
 openshift_hosted_registry_storage_nfs_directory=/exports
 openshift_hosted_registry_storage_volume_name=registry
 openshift_hosted_registry_storage_volume_size=5Gi
@@ -415,7 +416,7 @@ openshift_hosted_metrics_deploy=true
 # You'll see the metrics failing to deploy 59 times, it will, though, succeed the 60'th time.
 openshift_hosted_metrics_storage_kind=nfs
 openshift_hosted_metrics_storage_access_modes=['ReadWriteOnce']
-openshift_hosted_metrics_storage_host=$MASTER-0.$DOMAIN
+openshift_hosted_metrics_storage_host=${MASTER}-0
 openshift_hosted_metrics_storage_nfs_directory=/exports
 openshift_hosted_metrics_storage_volume_name=metrics
 openshift_hosted_metrics_storage_volume_size=10Gi
@@ -425,7 +426,7 @@ openshift_hosted_metrics_public_url=https://hawkular-metrics.$ROUTING/hawkular/m
 openshift_hosted_logging_deploy=true
 openshift_hosted_logging_storage_kind=nfs
 openshift_hosted_logging_storage_access_modes=['ReadWriteOnce']
-openshift_hosted_logging_storage_host=$MASTER-0.$DOMAIN
+openshift_hosted_logging_storage_host=${MASTER}-0
 openshift_hosted_logging_storage_nfs_directory=/exports
 openshift_hosted_logging_storage_volume_name=logging
 openshift_hosted_logging_storage_volume_size=10Gi
@@ -436,7 +437,7 @@ openshift_master_logging_public_url=https://kibana.$ROUTING
 EOF
 
 for node in ocpm-{0..3}; do
-	ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }' 
+	ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1
 done|grep ocpm >>/etc/ansible/hosts
 
 cat >> /etc/ansible/hosts <<EOF
@@ -445,12 +446,12 @@ cat >> /etc/ansible/hosts <<EOF
 EOF
 
 for node in ocpm-{0..3}; do
-	ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }' 
+	ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1 
 done|grep ocpm >>/etc/ansible/hosts
 
 cat >> /etc/ansible/hosts <<EOF
 [nfs]
-$MASTER-0.$DOMAIN
+$MASTER-0
 
 [master0]
 $MASTER-0
@@ -460,22 +461,22 @@ $MASTER-0
 EOF
 
 for node in ocpm-{0..3}; do
-	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'master\', \'zone\': \'default\'}\"
+	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'master\', \'zone\': \'default\'}\"
 done|grep ocpm >>/etc/ansible/hosts
 for node in ocpip-{0..5}; do
-	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\', \'router\': \'public\'}\"
+	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\', \'router\': \'public\'}\"
 done|grep ocpip >>/etc/ansible/hosts
 for node in ocpir-{0..5}; do
-	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\', \'router\': \'restricted\'}\"
+	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\', \'router\': \'restricted\'}\"
 done|grep ocpir >>/etc/ansible/hosts
 for node in ocpii-{0..5}; do
-	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\', \'router\': \'internal\'}\"
+	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\', \'router\': \'internal\'}\"
 done|grep ocpii >>/etc/ansible/hosts
 for node in ocpnt-{0..30}; do
-	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\', \'environment\': \'test\'}\"
+	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\', \'environment\': \'test\'}\"
 done|grep ocpnt >>/etc/ansible/hosts
 for node in ocpnp-{0..30}; do
-	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }') openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\', \'environment\': \'production\'}\"
+	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\', \'environment\': \'production\'}\"
 done|grep ocpnp >>/etc/ansible/hosts
 
 # Create and distribute hosts file to all nodes, this is due to us having to use 
@@ -513,7 +514,7 @@ chmod a+r /tmp/hosts
 #runuser -l $SUDOUSER -c "ansible-playbook ~/preinstall.yml"
 
 echo $(date) " - Running network_manager.yml playbook" 
-#DOMAIN=`domainname -d` 
+DOMAIN=`domainname -d` 
 
 # Setup NetworkManager to manage eth0 
 runuser -l $SUDOUSER -c "ansible-playbook /usr/share/ansible/openshift-ansible/playbooks/byo/openshift-node/network_manager.yml" 
@@ -565,12 +566,10 @@ echo $(date) "- Assigning cluster admin rights to user"
 
 runuser -l $SUDOUSER -c "ansible-playbook ~/assignclusteradminrights.yml"
 
-
 # Setting password for Cockpit
 echo $(date) "- Assigning password for root, which is used to login to Cockpit"
 
 runuser -l $SUDOUSER -c "ansible-playbook ~/assignrootpassword.yml"
-
 
 # Unset of OPENSHIFT_DEFAULT_REGISTRY. Just the easiest way out.
 cat > /tmp/atomic-openshift-master <<EOF
@@ -606,8 +605,6 @@ cat > /home/${SUDOUSER}/.ansible.cfg <<EOF
 library=/usr/share/ansible/openshift-ansible/library
 EOF
 
-exit 0
-
 # Create Storage Classes
 echo $(date) "- Creating Storage Classes"
 
@@ -616,6 +613,9 @@ runuser -l $SUDOUSER -c "ansible-playbook ~/configurestorageclass.yml"
 echo $(date) "- Sleep for 120"
 
 sleep 120
+
+exit 0
+echo $(date) " - Ending script here."
 
 # Execute setup-azure-master and setup-azure-node playbooks to configure Azure Cloud Provider
 echo $(date) "- Configuring OpenShift Cloud Provider to be Azure"
@@ -659,7 +659,5 @@ else
     echo $(date) "- Cloud Provider setup failed to delete stuck Master nodes or was not able to set them as unschedulable"
     exit 10
 fi
-
-oc label nodes --all logging-infra-fluentd=true logging=true
 
 echo $(date) " - Script complete"
