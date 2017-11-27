@@ -20,13 +20,9 @@ LOCATION=${13}
 
 BASTION=$(hostname -f)
 
-#DOMAIN=$( awk 'NR==2' /etc/resolv.conf | awk '{ print $2 }' )
-#DOMAIN=`domainname -d`
-
 echo "$SUDOUSER - $PASSWORD - $MASTER - $MASTERPUBLICIPHOSTNAME - $MASTERPUBLICIPADDRESS - $ROUTING "
 echo "$TENANTID - $SUBSCRIPTIONID - $AADCLIENTID - $AADCLIENTSECRET - $RESOURCEGROUP - $LOCATION"
 echo "$BASTION"
-#echo "$BASTION - $DOMAIN"
 
 # Generate private keys for use by Ansible
 echo $(date) " - Generating Private keys for use by Ansible for OpenShift Installation"
@@ -41,28 +37,6 @@ echo "Configuring SSH ControlPath to use shorter path name"
 sed -i -e "s/^# control_path = %(directory)s\/%%h-%%r/control_path = %(directory)s\/%%h-%%r/" /etc/ansible/ansible.cfg
 sed -i -e "s/^#host_key_checking = False/host_key_checking = False/" /etc/ansible/ansible.cfg
 sed -i -e "s/^#pty=False/pty=False/" /etc/ansible/ansible.cfg
-
-# Create Ansible Playbooks for Pre Installation tasks
-echo $(date) " - Create Ansible Playbooks for Pre Installation tasks"
-
-# Run on all nodes
-cat > /home/${SUDOUSER}/preinstall.yml <<EOF
----
-- hosts: nodes
-  remote_user: ${SUDOUSER}
-  become: yes
-  become_method: sudo
-  vars:
-    description: "Copy hosts file"
-  tasks:
-  - name: copy hosts file
-    copy:
-      src: /tmp/hosts
-      dest: /etc/hosts
-      owner: root
-      group: root
-      mode: 0644
-EOF
 
 # Create Ansible Playbooks for Post Installation tasks
 echo $(date) " - Create Ansible Playbooks for Post Installation tasks"
@@ -115,7 +89,7 @@ cat > /home/${SUDOUSER}/assignrootpassword.yml <<EOF
 EOF
 
 # Run on all masters
-cat > /home/${SUDOUSER}/postinstall4.yml <<EOF
+cat > /home/${SUDOUSER}/dockerregistry.yml <<EOF
 ---
 - hosts: masters
   remote_user: ${SUDOUSER}
@@ -379,6 +353,7 @@ ansible_ssh_user=$SUDOUSER
 ansible_become=yes
 openshift_install_examples=true
 deployment_type=openshift-enterprise
+openshift_release=v3.6
 docker_udev_workaround=true
 openshift_use_dnsmasq=true
 
@@ -461,57 +436,23 @@ $MASTER-0
 EOF
 
 for node in ocpm-{0..3}; do
-	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'master\', \'zone\': \'default\'}\"
+	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'master\', \'zone\': \'default\'}\" openshift_hostname=$node
 done|grep ocpm >>/etc/ansible/hosts
 for node in ocpip-{0..5}; do
-	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\', \'router\': \'public\'}\"
+	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\', \'router\': \'public\'}\" openshift_hostname=$node
 done|grep ocpip >>/etc/ansible/hosts
 for node in ocpir-{0..5}; do
-	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\', \'router\': \'restricted\'}\"
+	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\', \'router\': \'restricted\'}\" openshift_hostname=$node
 done|grep ocpir >>/etc/ansible/hosts
 for node in ocpii-{0..5}; do
-	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\', \'router\': \'internal\'}\"
+	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\', \'router\': \'internal\'}\" openshift_hostname=$node
 done|grep ocpii >>/etc/ansible/hosts
 for node in ocpnt-{0..30}; do
-	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\', \'environment\': \'test\'}\"
+	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\', \'environment\': \'test\'}\" openshift_hostname=$node
 done|grep ocpnt >>/etc/ansible/hosts
 for node in ocpnp-{0..30}; do
-	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\', \'environment\': \'production\'}\"
+	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\', \'environment\': \'production\'}\" openshift_hostname=$node
 done|grep ocpnp >>/etc/ansible/hosts
-
-# Create and distribute hosts file to all nodes, this is due to us having to use 
-(
-echo "127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4"
-echo "::1         localhost localhost.localdomain localhost6 localhost6.localdomain6"
-for node in ocpm-0 ocpm-1 ocpm-2; do
-	ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $3 " " $2  }'|sed -e 's/(//' -e 's/)//'i -e "s/.net/.net $node/"
-done
-
-for node in ocpip-{0..5}; do
-	ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $3 " " $2  }'|sed -e 's/(//' -e 's/)//' -e "s/.net/.net $node/"
-done
-
-for node in ocpir-{0..5}; do
-	ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $3 " " $2  }'|sed -e 's/(//' -e 's/)//' -e "s/.net/.net $node/"
-done
-
-for node in ocpii-{0..5}; do
-	ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $3 " " $2  }'|sed -e 's/(//' -e 's/)//' -e "s/.net/.net $node/"
-done
-
-for node in ocpnt-{0..30}; do
-	ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $3 " " $2  }'|sed -e 's/(//' -e 's/)//' -e "s/.net/.net $node/"
-done
-
-for node in ocpnp-{0..30}; do
-	ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $3 " " $2  }'|sed -e 's/(//' -e 's/)//' -e "s/.net/.net $node/"
-done
-) >/tmp/hosts
-
-chmod a+r /tmp/hosts
-
-# Create correct hosts file on all servers
-#runuser -l $SUDOUSER -c "ansible-playbook ~/preinstall.yml"
 
 echo $(date) " - Running network_manager.yml playbook" 
 DOMAIN=`domainname -d` 
@@ -526,7 +467,6 @@ runuser -l $SUDOUSER -c "ansible all -b -m service -a \"name=NetworkManager stat
 sleep 5 
 runuser -l $SUDOUSER -c "ansible all -b -m command -a \"nmcli con modify eth0 ipv4.dns-search $DOMAIN\"" 
 runuser -l $SUDOUSER -c "ansible all -b -m service -a \"name=NetworkManager state=restarted\"" 
-
 
 # Initiating installation of OpenShift Container Platform using Ansible Playbook
 echo $(date) " - Installing OpenShift Container Platform via Ansible Playbook"
@@ -571,6 +511,8 @@ echo $(date) "- Assigning password for root, which is used to login to Cockpit"
 
 runuser -l $SUDOUSER -c "ansible-playbook ~/assignrootpassword.yml"
 
+echo $(date) "- Unset OPENSHIFT_DEFAULT_REGISTRY"
+
 # Unset of OPENSHIFT_DEFAULT_REGISTRY. Just the easiest way out.
 cat > /tmp/atomic-openshift-master <<EOF
 OPTIONS=--loglevel=2
@@ -589,7 +531,7 @@ EOF
 chmod a+r /tmp/atomic-openshift-master
 
 # Unset default registry DNS name
-runuser -l $SUDOUSER -c "ansible-playbook ~/postinstall4.yml"
+runuser -l $SUDOUSER -c "ansible-playbook ~/dockerregistry.yml"
 
 # OPENSHIFT_DEFAULT_REGISTRY UNSET MAGIC
 for item in ocpm-0 ocpm-1 ocpm-2; do
@@ -600,6 +542,8 @@ for item in ocpm-0 ocpm-1 ocpm-2; do
 done
 
 # Making sure the ansible modify_yaml module is found
+echo $(date) "- Create ~/ansible.cfg"
+
 cat > /home/${SUDOUSER}/.ansible.cfg <<EOF
 [defaults]
 library=/usr/share/ansible/openshift-ansible/library
@@ -615,7 +559,7 @@ echo $(date) "- Sleep for 120"
 sleep 120
 
 exit 0
-echo $(date) " - Ending script here."
+echo $(date) " - Ending the script here temporarily."
 
 # Execute setup-azure-master and setup-azure-node playbooks to configure Azure Cloud Provider
 echo $(date) "- Configuring OpenShift Cloud Provider to be Azure"
