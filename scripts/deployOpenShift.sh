@@ -11,18 +11,30 @@ MASTER=$4
 MASTERPUBLICIPHOSTNAME=$5
 MASTERPUBLICIPADDRESS=$6
 ROUTING=${7}
-TENANTID=${8}
-SUBSCRIPTIONID=${9}
-AADCLIENTID=${10}
-AADCLIENTSECRET="${11}"
-RESOURCEGROUP=${12}
-LOCATION=${13}
+MASTERCOUNT=${8}
+INFRAPUBLICHOSTNAME=${9}
+INFRAPUBLICCOUNT=${10}
+INFRARESTRHOSTNAME=${11}
+INFRARESTRCOUNT=${12}
+TESTNODEHOSTNAME=${13}
+TESTNODECOUNT=${14}
+PRODNODEHOSTNAME=${15}
+PRODNODECOUNT=${16}
+TENANTID=${17}
+SUBSCRIPTIONID=${18}
+AADCLIENTID=${19}
+AADCLIENTSECRET="${20}"
+RESOURCEGROUP=${21}
+LOCATION=${22}
 
 BASTION=$(hostname -f)
 
-echo "$SUDOUSER - $PASSWORD - $MASTER - $MASTERPUBLICIPHOSTNAME - $MASTERPUBLICIPADDRESS - $ROUTING "
+MASTERLOOP=$((MASTERCOUNT - 1))
+
+echo "$SUDOUSER - $PASSWORD - $MASTER - $MASTERCOUNT - $MASTERPUBLICIPHOSTNAME - $MASTERPUBLICIPADDRESS - $ROUTING "
+echo "$INFRAPUBLICHOSTNAME - $INFRAPUBLICCOUNT - $INFRARESTRHOSTNAME - $INFRARESTRCOUNT - $TESTNODEHOSTNAME - $TESTNODECOUNT - $PRODNODEHOSTNAME - $PRODNODECOUNT"
 echo "$TENANTID - $SUBSCRIPTIONID - $AADCLIENTID - $AADCLIENTSECRET - $RESOURCEGROUP - $LOCATION"
-echo "$BASTION"
+echo "$BASTION - $MASTERLOOP"
 
 # Generate private keys for use by Ansible
 echo $(date) " - Generating Private keys for use by Ansible for OpenShift Installation"
@@ -409,22 +421,12 @@ openshift_master_logging_public_url=https://kibana.$ROUTING
 
 # host group for masters
 [masters]
-EOF
+$MASTER-[0:${MASTERLOOP}]
 
-for node in ocpm-{0..3}; do
-	ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1
-done|grep ocpm >>/etc/ansible/hosts
-
-cat >> /etc/ansible/hosts <<EOF
 # host group for etcd
 [etcd]
-EOF
+$MASTER-[0:${MASTERLOOP}] 
 
-for node in ocpm-{0..3}; do
-	ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1 
-done|grep ocpm >>/etc/ansible/hosts
-
-cat >> /etc/ansible/hosts <<EOF
 [nfs]
 $MASTER-0
 
@@ -435,24 +437,39 @@ $MASTER-0
 [nodes]
 EOF
 
-for node in ocpm-{0..3}; do
-	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'master\', \'zone\': \'default\'}\" openshift_hostname=$node
-done|grep ocpm >>/etc/ansible/hosts
-for node in ocpip-{0..5}; do
-	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\', \'router\': \'public\'}\" openshift_hostname=$node
-done|grep ocpip >>/etc/ansible/hosts
-for node in ocpir-{0..5}; do
-	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\', \'router\': \'restricted\'}\" openshift_hostname=$node
-done|grep ocpir >>/etc/ansible/hosts
-for node in ocpii-{0..5}; do
-	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'infra\', \'zone\': \'default\', \'router\': \'internal\'}\" openshift_hostname=$node
-done|grep ocpii >>/etc/ansible/hosts
-for node in ocpnt-{0..30}; do
-	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\', \'environment\': \'test\'}\" openshift_hostname=$node
-done|grep ocpnt >>/etc/ansible/hosts
-for node in ocpnp-{0..30}; do
-	echo $(ping -c 1 $node 2>/dev/null|grep ocp|grep PING|awk '{ print $2 }'|cut -d'.' -f1) openshift_node_labels=\"{\'region\': \'nodes\', \'zone\': \'default\', \'environment\': \'production\'}\" openshift_hostname=$node
-done|grep ocpnp >>/etc/ansible/hosts
+# Loop to add Masters
+
+for (( c=0; c<$MASTERCOUNT; c++ ))
+do
+  echo "$MASTER-$c openshift_node_labels=\"{'region': 'master', 'zone': 'default'}\" openshift_hostname=$MASTER-$c" >> /etc/ansible/hosts
+done
+
+# Loop to add Infra Nodes
+
+for (( c=0; c<$INFRAPUBLICCOUNT; c++ ))
+do
+  echo "$INFRAPUBLICHOSTNAME-$c openshift_node_labels=\"{'region': 'infra', 'zone': 'default', 'router': 'public'}\" openshift_hostname=$INFRAPUBLICHOSTNAME-$c" >> /etc/ansible/hosts
+done
+
+for (( c=0; c<$INFRARESTRCOUNT; c++ ))
+do
+  echo "$INFRARESTRHOSTNAME-$c openshift_node_labels=\"{'region': 'infra', 'zone': 'default', 'router': 'restricted'}\" openshift_hostname=$INFRARESTRHOSTNAME-$c" >> /etc/ansible/hosts
+done
+
+# Add temporary Infra Node (until MS supports ILB SNAT)
+echo "ocpii-0 openshift_node_labels=\"{'region': 'infra', 'zone': 'default', 'router': 'internal'}\" openshift_hostname=ocpii-0" >> /etc/ansible/hosts
+
+# Loop to add Compute Nodes
+
+for (( c=0; c<$TESTNODECOUNT; c++ ))
+do
+  echo "$TESTNODEHOSTNAME-$c openshift_node_labels=\"{'region': 'nodes', 'zone': 'default', 'environment': 'test'}\" openshift_hostname=$TESTNODEHOSTNAME-$c" >> /etc/ansible/hosts
+done
+
+for (( c=0; c<$PRODNODECOUNT; c++ ))
+do
+  echo "$PRODNODEHOSTNAME-$c openshift_node_labels=\"{'region': 'nodes', 'zone': 'default', 'environment': 'production'}\" openshift_hostname=$PRODNODEHOSTNAME-$c" >> /etc/ansible/hosts
+done
 
 echo $(date) " - Running network_manager.yml playbook" 
 DOMAIN=`domainname -d` 
