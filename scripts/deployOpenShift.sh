@@ -14,8 +14,8 @@ ROUTING=${7}
 MASTERCOUNT=${8}
 INFRAPUBLICHOSTNAME=${9}
 INFRAPUBLICCOUNT=${10}
-INFRARESTRHOSTNAME=${11}
-INFRARESTRCOUNT=${12}
+INFRARESTRDHOSTNAME=${11}
+INFRARESTRDCOUNT=${12}
 TESTNODEHOSTNAME=${13}
 TESTNODECOUNT=${14}
 PRODNODEHOSTNAME=${15}
@@ -28,13 +28,13 @@ RESOURCEGROUP=${21}
 LOCATION=${22}
 
 BASTION=$(hostname -f)
-
 MASTERLOOP=$((MASTERCOUNT - 1))
 
-echo "$SUDOUSER - $PASSWORD - $MASTER - $MASTERCOUNT - $MASTERPUBLICIPHOSTNAME - $MASTERPUBLICIPADDRESS - $ROUTING "
-echo "$INFRAPUBLICHOSTNAME - $INFRAPUBLICCOUNT - $INFRARESTRHOSTNAME - $INFRARESTRCOUNT - $TESTNODEHOSTNAME - $TESTNODECOUNT - $PRODNODEHOSTNAME - $PRODNODECOUNT"
-echo "$TENANTID - $SUBSCRIPTIONID - $AADCLIENTID - $AADCLIENTSECRET - $RESOURCEGROUP - $LOCATION"
-echo "$BASTION - $MASTERLOOP"
+# for debugging purps
+#echo "$SUDOUSER - $PASSWORD - $MASTER - $MASTERCOUNT - $MASTERPUBLICIPHOSTNAME - $MASTERPUBLICIPADDRESS - $ROUTING "
+#echo "$INFRAPUBLICHOSTNAME - $INFRAPUBLICCOUNT - $INFRARESTRDHOSTNAME - $INFRARESTRDCOUNT - $TESTNODEHOSTNAME - $TESTNODECOUNT - $PRODNODEHOSTNAME - $PRODNODECOUNT"
+#echo "$TENANTID - $SUBSCRIPTIONID - $AADCLIENTID - $AADCLIENTSECRET - $RESOURCEGROUP - $LOCATION"
+#echo "$BASTION - $MASTERLOOP"
 
 # Generate private keys for use by Ansible
 echo $(date) " - Generating Private keys for use by Ansible for OpenShift Installation"
@@ -451,9 +451,9 @@ do
   echo "$INFRAPUBLICHOSTNAME-$c openshift_node_labels=\"{'region': 'infra', 'zone': 'default', 'router': 'public'}\" openshift_hostname=$INFRAPUBLICHOSTNAME-$c" >> /etc/ansible/hosts
 done
 
-for (( c=0; c<$INFRARESTRCOUNT; c++ ))
+for (( c=0; c<$INFRARESTRDCOUNT; c++ ))
 do
-  echo "$INFRARESTRHOSTNAME-$c openshift_node_labels=\"{'region': 'infra', 'zone': 'default', 'router': 'restricted'}\" openshift_hostname=$INFRARESTRHOSTNAME-$c" >> /etc/ansible/hosts
+  echo "$INFRARESTRDHOSTNAME-$c openshift_node_labels=\"{'region': 'infra', 'zone': 'default', 'router': 'restricted'}\" openshift_hostname=$INFRARESTRDHOSTNAME-$c" >> /etc/ansible/hosts
 done
 
 # Add temporary Infra Node (until MS supports ILB SNAT)
@@ -551,11 +551,12 @@ chmod a+r /tmp/atomic-openshift-master
 runuser -l $SUDOUSER -c "ansible-playbook ~/dockerregistry.yml"
 
 # OPENSHIFT_DEFAULT_REGISTRY UNSET MAGIC
-for item in ocpm-0 ocpm-1 ocpm-2; do
-	runuser -l $SUDOUSER -c "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $item 'sudo sed -i \"s/OPENSHIFT_DEFAULT_REGISTRY/#OPENSHIFT_DEFAULT_REGISTRY/g\" /etc/sysconfig/atomic-openshift-master-api'"
-	runuser -l $SUDOUSER -c "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $item 'sudo sed -i \"s/OPENSHIFT_DEFAULT_REGISTRY/#OPENSHIFT_DEFAULT_REGISTRY/g\" /etc/sysconfig/atomic-openshift-master-controllers'"
-	runuser -l $SUDOUSER -c "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $item 'sudo systemctl restart atomic-openshift-master-api'"
-	runuser -l $SUDOUSER -c "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $item 'sudo systemctl restart atomic-openshift-master-controllers'"
+for (( c=0; c<$MASTERCOUNT; c++ ))
+do
+  runuser -l $SUDOUSER -c "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $MASTER-$c 'sudo sed -i \"s/OPENSHIFT_DEFAULT_REGISTRY/#OPENSHIFT_DEFAULT_REGISTRY/g\" /etc/sysconfig/atomic-openshift-master-api'"
+  runuser -l $SUDOUSER -c "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $MASTER-$c 'sudo sed -i \"s/OPENSHIFT_DEFAULT_REGISTRY/#OPENSHIFT_DEFAULT_REGISTRY/g\" /etc/sysconfig/atomic-openshift-master-controllers'"
+  runuser -l $SUDOUSER -c "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $MASTER-$c 'sudo systemctl restart atomic-openshift-master-api'"
+  runuser -l $SUDOUSER -c "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $MASTER-$c 'sudo systemctl restart atomic-openshift-master-controllers'"
 done
 
 # Making sure the ansible modify_yaml module is found
@@ -574,9 +575,6 @@ runuser -l $SUDOUSER -c "ansible-playbook ~/configurestorageclass.yml"
 echo $(date) "- Sleep for 120"
 
 sleep 120
-
-exit 0
-echo $(date) " - Ending the script here temporarily."
 
 # Execute setup-azure-master and setup-azure-node playbooks to configure Azure Cloud Provider
 echo $(date) "- Configuring OpenShift Cloud Provider to be Azure"
