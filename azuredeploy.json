@@ -222,12 +222,12 @@
 		},
 		"defaultSubDomainType": {
 			"type": "string",
-			"defaultValue": "xipio",
+			"defaultValue": "nipio",
 			"allowedValues": [
-				"xipio", "custom"
+				"nipio", "custom"
 			],
 			"metadata": {
-				"description": "Default Subdomain type - xip.io or custom (defined in next parameter)"
+				"description": "Default Subdomain type - nip.io or custom (defined in next parameter)"
 			}
 		},
 		"defaultSubDomain": {
@@ -235,7 +235,7 @@
 			"defaultValue": "contoso.com",
 			"minLength": 1,
 			"metadata": {
-				"description": "Default Subdomain for application routing (Wildcard DNS) - must enter something even if you are using xip.io"
+				"description": "Default Subdomain for application routing (Wildcard DNS) - must enter something even if you are using nip.io"
 			}
 		}
 	},
@@ -1953,7 +1953,7 @@
 					"aadClientSecret": {
 						"value": "[parameters('aadClientSecret')]"
 					},
-					"xipioDomain": {
+					"nipioDomain": {
 						"value": "[concat(reference(parameters('infraPublicLbPublicIpDnsLabel')).ipAddress, '.nip.io')]"
 					},
 					"customDomain": {

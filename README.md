@@ -98,8 +98,8 @@ You will also need to get the Pool ID that contains your entitlements for OpenSh
 16. keyVaultResourceGroup: The name of the Resource Group that contains the Key Vault
 17. keyVaultName: The name of the Key Vault you created
 18. keyVaultSecret: The Secret Name you used when creating the Secret (that contains the Private Key)
-19. defaultSubDomainType: This will either be xipio (if you don't have your own domain) or custom if you have your own domain that you would like to use for routing
-20. defaultSubDomain: The wildcard DNS name you would like to use for routing if you selected custom above.  If you selected xipio above, you must still enter something here but it will not be used
+19. defaultSubDomainType: This will either be nipio (if you don't have your own domain) or custom if you have your own domain that you would like to use for routing
+20. defaultSubDomain: The wildcard DNS name you would like to use for routing if you selected custom above.  If you selected nipio above, you must still enter something here but it will not be used
 
 ## Deploy Template
 

@@ -64,7 +64,7 @@ KEYVAULTNAME=
 KEYVAULTSECRETNAME=
 
 # Change this to 'custom' if you want to utilize your own DNS instead of nip.io
-DOMAINTYPE=xipio
+DOMAINTYPE=nipio
 
 # If you are using custom DOMAINTYPE, change this to the subdomain which you have pointed to INFRA_DNS
 CUSTOMDOMAIN=domainname.com
