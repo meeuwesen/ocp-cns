@@ -8,7 +8,7 @@
 				"description": "Base URL for Template Files",
 				"artifactsBaseUrl": ""
 			},
-			"defaultValue": "https://raw.githubusercontent.com/maalbers/ocp-cns/master/"
+			"defaultValue": "https://raw.githubusercontent.com/maalbers/ocp-cns/NSGs/"
 		},
 		"masterVmSize": {
 			"type": "string",
@@ -490,18 +490,70 @@
 			"location": "[variables('location')]",
 			"properties": {
 				"securityRules": [{
-					"name": "allowSSHin_all",
+					"name": "SSH_aw5092_bastion",
 					"properties": {
-						"description": "Allow SSH in from all locations",
+						"description": "SSH_aw5092_bastion",
 						"protocol": "Tcp",
 						"sourcePortRange": "*",
 						"destinationPortRange": "22",
+						"sourceAddressPrefix": "172.22.196.100/32",
+						"destinationAddressPrefix": "reference(concat(variables('openshiftBastionHostname'), 'nic')).ipConfigurations[0].properties.privateIPAddress",
+						"access": "Allow",
+						"priority": 1010,
+						"direction": "Inbound"
+					}
+				}, {					
+					"name": "SSH_aw5125_bastion",
+					"properties": {
+						"description": "SSH_aw5125_bastion",
+						"protocol": "Tcp",
+						"sourcePortRange": "*",
+						"destinationPortRange": "22",
+						"sourceAddressPrefix": "172.22.202.176/32",
+						"destinationAddressPrefix": "reference(concat(variables('openshiftBastionHostname'), 'nic')).ipConfigurations[0].properties.privateIPAddress",
+						"access": "Allow",
+						"priority": 1011,
+						"direction": "Inbound"
+					}				
+				}, {					
+					"name": "SSH_aw5111_bastion",
+					"properties": {
+						"description": "SSH_aw5111_bastion",
+						"protocol": "Tcp",
+						"sourcePortRange": "*",
+						"destinationPortRange": "22",
+						"sourceAddressPrefix": "172.22.196.119/32",
+						"destinationAddressPrefix": "reference(concat(variables('openshiftBastionHostname'), 'nic')).ipConfigurations[0].properties.privateIPAddress",
+						"access": "Allow",
+						"priority": 1012,
+						"direction": "Inbound"
+					}			
+				}, {					
+					"name": "SSH_STWiFi_bastion",
+					"properties": {
+						"description": "SSH_STWiFi_bastion",
+						"protocol": "Tcp",
+						"sourcePortRange": "*",
+						"destinationPortRange": "22",
+						"sourceAddressPrefix": "77.241.0.0/16",
+						"destinationAddressPrefix": "reference(concat(variables('openshiftBastionHostname'), 'nic')).ipConfigurations[0].properties.privateIPAddress",
+						"access": "Allow",
+						"priority": 1013,
+						"direction": "Inbound"
+					}
+				}, {					
+					"name": "DenyAllInbound",
+					"properties": {
+						"description": "DenyAllInbound",
+						"protocol": "*",
+						"sourcePortRange": "*",
+						"destinationPortRange": "*",
 						"sourceAddressPrefix": "*",
 						"destinationAddressPrefix": "*",
-						"access": "Allow",
-						"priority": 100,
+						"access": "Deny",
+						"priority": 4090,
 						"direction": "Inbound"
-					}					
+					}
 				}]
 			}
 		}, {
