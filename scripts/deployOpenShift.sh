@@ -140,6 +140,7 @@ g_tenantId: $TENANTID
 g_subscriptionId: $SUBSCRIPTIONID
 g_aadClientId: $AADCLIENTID
 g_aadClientSecret: $AADCLIENTSECRET
+g_aadTenantId: $TENANTID
 g_resourceGroup: $RESOURCEGROUP
 g_location: $LOCATION
 EOF
@@ -183,7 +184,9 @@ cat > /home/${SUDOUSER}/setup-azure-master.yml <<EOF
           "aadClientSecret" : "{{ g_aadClientSecret }}",
           "subscriptionID" : "{{ g_subscriptionId }}",
           "tenantID" : "{{ g_tenantId }}",
+          "aadtenantID" : "{{ g_tenantId }}",
           "resourceGroup": "{{ g_resourceGroup }}",
+          "location": "{{ g_location }}",
         } 
     notify:
     - restart atomic-openshift-master-api
