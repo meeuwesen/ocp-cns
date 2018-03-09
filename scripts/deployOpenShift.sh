@@ -184,7 +184,7 @@ cat > /home/${SUDOUSER}/setup-azure-master.yml <<EOF
           "aadClientSecret" : "{{ g_aadClientSecret }}",
           "subscriptionID" : "{{ g_subscriptionId }}",
           "tenantID" : "{{ g_tenantId }}",
-          "aadtenantID" : "{{ g_tenantId }}",
+          "aadTenantID" : "{{ g_aadTenantId }}",
           "resourceGroup": "{{ g_resourceGroup }}",
           "location": "{{ g_location }}",
         } 
