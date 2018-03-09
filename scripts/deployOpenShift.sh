@@ -375,7 +375,7 @@ osm_use_cockpit=true
 os_sdn_network_plugin_name='redhat/openshift-ovs-multitenant'
 openshift_cloudprovider_kind=azure
 osm_default_node_selector='environment=test'
-openshift_disable_check=disk_availability,memory_availability
+openshift_disable_check=disk_availability,memory_availability,package_availability,package_version
 
 # default selectors for router and registry services
 openshift_router_selector='region=infra'
