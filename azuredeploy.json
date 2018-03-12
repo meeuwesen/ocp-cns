@@ -166,6 +166,16 @@
 				"description": "Password for OpenShift user to login to OpenShift Console"
 			}
 		},
+		"enableAzure": {
+			"type": "string",
+			"defaultValue": "false",
+			"allowedValues": [
+				"true", "false"
+			],
+			"metadata": {
+				"description": "Enable Azure as Cloud Provider - true or false"
+			}
+		},
 		"aadClientId": {
 			"type": "string",
 			"minLength": 1,
