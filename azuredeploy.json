@@ -68,6 +68,14 @@
 				"description": "OpenShift Compute Node VM size"
 			}
 		},
+	                "storageKind": {
+                        "type": "string",
+                        "defaultValue": "managed",
+                        "allowedValues": ["managed", "unmanaged"],
+                        "metadata": {
+                                "description": "Use Managed or Unmanaged Disks"
+                        }
+                },
 		"openshiftClusterPrefix": {
 			"type": "string",
 			"defaultValue": "ocp",
