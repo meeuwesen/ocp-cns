@@ -84,7 +84,7 @@ then
    echo "Docker thin pool logical volume created successfully"
 else
    echo "Error creating logical volume for Docker"
-   exit 5
+   #exit 5
 fi
 
 # Enable and start Docker services
